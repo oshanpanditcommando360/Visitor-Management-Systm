@@ -76,3 +76,34 @@ export const validateVisitor = async ({ visitorId, otp }) => {
   }
 };
 
+export const getCheckedInVisitors = async () => {
+  try {
+    return await db.visitor.findMany({
+      where: { status: "CHECKED_IN" },
+      orderBy: { checkInTime: "desc" },
+      select: { id: true, name: true },
+    });
+  } catch (error) {
+    console.error("Failed to fetch checked-in visitors", error);
+    throw new Error("Unable to fetch checked-in visitors.");
+  }
+};
+
+export const checkoutVisitor = async (visitorId) => {
+  try {
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
+      data: { status: "CHECKED_OUT", checkOutTime: new Date() },
+    });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "EXIT",
+      message: `${visitor.name} checked out`,
+    });
+    return visitor;
+  } catch (error) {
+    console.error("Failed to checkout visitor", error);
+    throw new Error("Unable to checkout visitor.");
+  }
+};
+

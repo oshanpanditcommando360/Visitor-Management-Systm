@@ -8,11 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
-  visitRequestByGuard,
-  getVisitorLogsForGuard,
-  getScheduledVisitors,
-  validateVisitor,
-} from "@/actions/visitor";
+    visitRequestByGuard,
+    getVisitorLogsForGuard,
+    getScheduledVisitors,
+    getCheckedInVisitors,
+    validateVisitor,
+    checkoutVisitor,
+  } from "@/actions/visitor";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 
@@ -26,8 +28,11 @@ export default function GuardView() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [logs, setLogs] = useState([]);
   const [scheduled, setScheduled] = useState([]);
+  const [checkedIn, setCheckedIn] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [loadingScheduled, setLoadingScheduled] = useState(false);
+  const [loadingCheckedIn, setLoadingCheckedIn] = useState(false);
+  const [operation, setOperation] = useState("checkin");
 
 
   const fetchLogs = async () => {
@@ -54,12 +59,26 @@ export default function GuardView() {
     }
   };
 
+  const fetchCheckedIn = async () => {
+    setLoadingCheckedIn(true);
+    try {
+      const data = await getCheckedInVisitors();
+      setCheckedIn(data);
+    } catch (err) {
+      toast.error("Failed to load visitors.");
+    } finally {
+      setLoadingCheckedIn(false);
+    }
+  };
+
   useEffect(() => {
     fetchLogs();
     fetchScheduled();
+    fetchCheckedIn();
     const interval = setInterval(() => {
       fetchLogs();
       fetchScheduled();
+      fetchCheckedIn();
     }, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -81,14 +100,21 @@ export default function GuardView() {
     }
   };
 
-  const handleOtpValidation = async () => {
+  const handleOperationAction = async () => {
     setOtpLoading(true);
     try {
-      await validateVisitor({ visitorId: selectedVisitor, otp });
-      toast.success("Visitor validated");
-      setOtp("");
+      if (operation === "checkin") {
+        await validateVisitor({ visitorId: selectedVisitor, otp });
+        toast.success("Visitor validated");
+        setOtp("");
+      } else {
+        await checkoutVisitor(selectedVisitor);
+        toast.success("Visitor checked out");
+      }
       setSelectedVisitor("");
       fetchLogs();
+      fetchScheduled();
+      fetchCheckedIn();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -147,13 +173,26 @@ export default function GuardView() {
             <TabsContent value="validate">
               <div className="space-y-5">
                 <div className="space-y-1">
+                  <Label>Operation</Label>
+                  <Select onValueChange={setOperation} defaultValue="checkin">
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select operation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="checkin">Check In</SelectItem>
+                      <SelectItem value="checkout">Check Out</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
                   <Label>Select Visitor</Label>
                   <Select onValueChange={(value) => setSelectedVisitor(value)}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Choose visitor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {scheduled.map((visitor) => (
+                      {(operation === "checkin" ? scheduled : checkedIn).map((visitor) => (
                         <SelectItem key={visitor.id} value={visitor.id}>
                           {visitor.name}
                         </SelectItem>
@@ -162,32 +201,47 @@ export default function GuardView() {
                   </Select>
                 </div>
 
-                <div className="space-y-1">
-                  <Label>Enter OTP</Label>
-                  <Input
-                    placeholder="Enter OTP received by visitor"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                  />
-                </div>
+                {operation === "checkin" && (
+                  <div className="space-y-1">
+                    <Label>Enter OTP</Label>
+                    <Input
+                      placeholder="Enter OTP received by visitor"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <Button
-                  onClick={handleOtpValidation}
-                  disabled={!selectedVisitor || !otp || otpLoading}
+                  onClick={handleOperationAction}
+                  disabled={
+                    !selectedVisitor ||
+                    (operation === "checkin" && !otp) ||
+                    otpLoading
+                  }
                   className="w-full text-md"
                 >
-                  {otpLoading ? "Validating..." : "Validate OTP"}
+                  {otpLoading
+                    ? operation === "checkin"
+                      ? "Validating..."
+                      : "Processing..."
+                    : operation === "checkin"
+                    ? "Validate OTP"
+                    : "Check Out"}
                 </Button>
 
-                <div className="flex items-center my-4">
-                  <Separator className="flex-1" />
-                  <span className="px-2 text-muted-foreground text-sm">or</span>
-                  <Separator className="flex-1" />
-                </div>
-
-                <div className="text-center">
-                  <Button className="text-sm">Scan QR Code</Button>
-                </div>
+                {operation === "checkin" && (
+                  <>
+                    <div className="flex items-center my-4">
+                      <Separator className="flex-1" />
+                      <span className="px-2 text-muted-foreground text-sm">or</span>
+                      <Separator className="flex-1" />
+                    </div>
+                    <div className="text-center">
+                      <Button className="text-sm">Scan QR Code</Button>
+                    </div>
+                  </>
+                )}
               </div>
             </TabsContent>
 
