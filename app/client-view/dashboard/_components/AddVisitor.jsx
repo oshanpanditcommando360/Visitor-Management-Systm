@@ -19,6 +19,7 @@ export default function AddVisitor() {
     durationMinutes: "",
     purpose: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,6 +39,7 @@ export default function AddVisitor() {
       return;
     }
 
+    setLoading(true);
     try {
       const client = JSON.parse(localStorage.getItem("clientInfo"));
       const scheduledEntry = new Date(`${visitDate.toDateString()} ${entryTime}`);
@@ -66,6 +68,8 @@ export default function AddVisitor() {
       });
     } catch (err) {
       toast.error("Failed to add visitor.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,7 +113,9 @@ export default function AddVisitor() {
             <Label className="block text-sm font-medium mb-1">Purpose of Visit</Label>
             <Textarea name="purpose" value={formData.purpose} onChange={handleChange} required />
           </div>
-          <Button type="submit" className="w-full">Submit Visitor</Button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Submitting..." : "Submit Visitor"}
+          </Button>
         </form>
       </CardContent>
     </Card>

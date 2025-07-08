@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { createAlert } from "./alert";
 
 export const createClient = async (clientData) => {
     try {
@@ -42,12 +43,13 @@ export const signInClient = async ({ email, password }) => {
     }
 }
 
-export const getPendingVisitorRequests = async () => {
+export const getPendingVisitorRequests = async (clientId) => {
   try {
     const visitors = await db.visitor.findMany({
       where: {
         status: "PENDING",
         requestedByGuard: true,
+        clientId,
       },
       orderBy: {
         createdAt: "desc",
@@ -66,17 +68,21 @@ export const approveVisitorRequest = async ({ visitorId, durationHours, duration
     const now = new Date();
     const scheduledExit = new Date(now.getTime() + durationHours * 60 * 60 * 1000 + durationMinutes * 60 * 1000);
 
-    await db.visitor.update({
-      where: {
-        id: visitorId,
-      },
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
       data: {
-        status: "CHECKED_IN", // or "APPROVED" if you have such a status
+        status: "CHECKED_IN",
         scheduledEntry: now,
         scheduledExit: scheduledExit,
-        checkInTime:now,
-        approvedByClient:true,     
+        checkInTime: now,
+        approvedByClient: true,
       },
+    });
+
+    await createAlert({
+      visitorId: visitor.id,
+      type: "CHECKED_IN",
+      message: `${visitor.name} checked in`,
     });
 
     return { success: true };
@@ -88,13 +94,15 @@ export const approveVisitorRequest = async ({ visitorId, durationHours, duration
 
 export const denyVisitorRequest = async (visitorId) => {
   try {
-    await db.visitor.update({
-      where: {
-        id: visitorId,
-      },
-      data: {
-        status: "DENIED", 
-      },
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
+      data: { status: "DENIED" },
+    });
+
+    await createAlert({
+      visitorId: visitor.id,
+      type: "DENIED",
+      message: `${visitor.name} visit denied`,
     });
 
     return { success: true };
@@ -125,6 +133,11 @@ export const addVisitorByClient = async ({
         status: "APPROVED",
       },
     });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "SCHEDULED",
+      message: `${visitor.name} visit scheduled`,
+    });
 
     return visitor;
   } catch (err) {
@@ -133,9 +146,10 @@ export const addVisitorByClient = async ({
   }
 };
 
-export const getAllVisitorRecords = async () => {
+export const getAllVisitorRecords = async (clientId) => {
   try {
     const visitors = await db.visitor.findMany({
+      where: { clientId },
       orderBy: {
         createdAt: "desc",
       },
@@ -147,6 +161,7 @@ export const getAllVisitorRecords = async () => {
         scheduledExit: true,
         checkInTime: true,
         checkOutTime: true,
+        requestedByGuard: true,
         status: true,
         createdAt: true,
       },
@@ -156,10 +171,22 @@ export const getAllVisitorRecords = async () => {
       id: visitor.id,
       name: visitor.name,
       purpose: visitor.purpose,
-      date: visitor.scheduledEntry?.toLocaleDateString() ?? "-",
-      checkInTime: visitor.checkInTime ? new Date(visitor.checkInTime).toLocaleTimeString() : "-",
-      scheduledCheckOut: visitor.scheduledExit ? new Date(visitor.scheduledExit).toLocaleTimeString() : "-",
-      actualCheckOutTime: visitor.checkOutTime ? new Date(visitor.checkOutTime).toLocaleTimeString() : "-",
+      date: visitor.requestedByGuard
+        ? new Date(visitor.createdAt).toLocaleDateString()
+        : visitor.scheduledEntry?.toLocaleDateString() ?? "-",
+      scheduledCheckIn: visitor.scheduledEntry
+        ? new Date(visitor.scheduledEntry).toLocaleTimeString()
+        : "-",
+      scheduledCheckOut: visitor.scheduledExit
+        ? new Date(visitor.scheduledExit).toLocaleTimeString()
+        : "-",
+      checkInTime: visitor.checkInTime
+        ? new Date(visitor.checkInTime).toLocaleTimeString()
+        : "-",
+      checkOutTime: visitor.checkOutTime
+        ? new Date(visitor.checkOutTime).toLocaleTimeString()
+        : "-",
+      addedBy: visitor.requestedByGuard ? "Guard" : "Client",
       status:
         visitor.status === "PENDING" && !visitor.scheduledEntry
           ? "Not Checked In"

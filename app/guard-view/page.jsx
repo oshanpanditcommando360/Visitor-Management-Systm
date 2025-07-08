@@ -7,14 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { visitRequestByGuard } from "@/actions/visitor";
-import { getVisitorLogsForGuard } from "@/actions/visitor";
+import {
+    visitRequestByGuard,
+    getVisitorLogsForGuard,
+    getScheduledVisitors,
+    getCheckedInVisitors,
+    validateVisitor,
+    checkoutVisitor,
+  } from "@/actions/visitor";
 import { toast } from "sonner";
-
-const mockVisitors = [
-  { id: "v1", name: "Michael Scott" },
-  { id: "v2", name: "Pam Beesly" },
-];
+import { RefreshCw } from "lucide-react";
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 
@@ -22,23 +24,63 @@ export default function GuardView() {
   const [request, setRequest] = useState({ name: "", purpose: "", clientId: "" });
   const [selectedVisitor, setSelectedVisitor] = useState("");
   const [otp, setOtp] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [otpValidated, setOtpValidated] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [scheduled, setScheduled] = useState([]);
+  const [checkedIn, setCheckedIn] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [loadingScheduled, setLoadingScheduled] = useState(false);
+  const [loadingCheckedIn, setLoadingCheckedIn] = useState(false);
+  const [operation, setOperation] = useState("checkin");
 
 
   const fetchLogs = async () => {
+    setLoadingLogs(true);
     try {
       const data = await getVisitorLogsForGuard();
-      console.log(data);
       setLogs(data);
     } catch (err) {
       toast.error("Failed to load logs.");
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
+  const fetchScheduled = async () => {
+    setLoadingScheduled(true);
+    try {
+      const data = await getScheduledVisitors();
+      setScheduled(data);
+    } catch (err) {
+      toast.error("Failed to load visitors.");
+    } finally {
+      setLoadingScheduled(false);
+    }
+  };
+
+  const fetchCheckedIn = async () => {
+    setLoadingCheckedIn(true);
+    try {
+      const data = await getCheckedInVisitors();
+      setCheckedIn(data);
+    } catch (err) {
+      toast.error("Failed to load visitors.");
+    } finally {
+      setLoadingCheckedIn(false);
     }
   };
 
   useEffect(() => {
     fetchLogs();
+    fetchScheduled();
+    fetchCheckedIn();
+    const interval = setInterval(() => {
+      fetchLogs();
+      fetchScheduled();
+      fetchCheckedIn();
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
 
@@ -46,13 +88,38 @@ export default function GuardView() {
   const handleRequestSubmit = async () => {
     const client = JSON.parse(localStorage.getItem("clientInfo"));
     request.clientId = client.clientId;
-    const visitor = await visitRequestByGuard(request);
-    setSubmitted(true);
+    setRequestLoading(true);
+    try {
+      await visitRequestByGuard(request);
+      toast.success("Visit request raised successfully.");
+      setRequest({ name: "", purpose: "", clientId: "" });
+    } catch (err) {
+      toast.error("Failed to raise visit request.");
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
-  const handleOtpValidation = () => {
-    console.log("OTP Submitted:", { visitor: selectedVisitor, otp });
-    setOtpValidated(true);
+  const handleOperationAction = async () => {
+    setOtpLoading(true);
+    try {
+      if (operation === "checkin") {
+        await validateVisitor({ visitorId: selectedVisitor, otp });
+        toast.success("Visitor validated");
+        setOtp("");
+      } else {
+        await checkoutVisitor(selectedVisitor);
+        toast.success("Visitor checked out");
+      }
+      setSelectedVisitor("");
+      fetchLogs();
+      fetchScheduled();
+      fetchCheckedIn();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
   };
 
   return (
@@ -95,17 +162,29 @@ export default function GuardView() {
                 </div>
                 <Button
                   onClick={handleRequestSubmit}
-                  disabled={!request.name || !request.purpose}
+                  disabled={!request.name || !request.purpose || requestLoading}
                   className="w-full text-md"
                 >
-                  Submit Request
+                  {requestLoading ? "Submitting..." : "Submit Request"}
                 </Button>
-                {submitted && <p className="text-green-600 text-sm text-center">Visit request raised successfully.</p>}
               </div>
             </TabsContent>
 
             <TabsContent value="validate">
               <div className="space-y-5">
+                <div className="space-y-1">
+                  <Label>Operation</Label>
+                  <Select onValueChange={setOperation} defaultValue="checkin">
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select operation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="checkin">Check In</SelectItem>
+                      <SelectItem value="checkout">Check Out</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-1">
                   <Label>Select Visitor</Label>
                   <Select onValueChange={(value) => setSelectedVisitor(value)}>
@@ -113,8 +192,8 @@ export default function GuardView() {
                       <SelectValue placeholder="Choose visitor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockVisitors.map((visitor) => (
-                        <SelectItem key={visitor.id} value={visitor.name}>
+                      {(operation === "checkin" ? scheduled : checkedIn).map((visitor) => (
+                        <SelectItem key={visitor.id} value={visitor.id}>
                           {visitor.name}
                         </SelectItem>
                       ))}
@@ -122,34 +201,47 @@ export default function GuardView() {
                   </Select>
                 </div>
 
-                <div className="space-y-1">
-                  <Label>Enter OTP</Label>
-                  <Input
-                    placeholder="Enter OTP received by visitor"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                  />
-                </div>
+                {operation === "checkin" && (
+                  <div className="space-y-1">
+                    <Label>Enter OTP</Label>
+                    <Input
+                      placeholder="Enter OTP received by visitor"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <Button
-                  onClick={handleOtpValidation}
-                  disabled={!selectedVisitor || !otp}
+                  onClick={handleOperationAction}
+                  disabled={
+                    !selectedVisitor ||
+                    (operation === "checkin" && !otp) ||
+                    otpLoading
+                  }
                   className="w-full text-md"
                 >
-                  Validate OTP
+                  {otpLoading
+                    ? operation === "checkin"
+                      ? "Validating..."
+                      : "Processing..."
+                    : operation === "checkin"
+                    ? "Validate OTP"
+                    : "Check Out"}
                 </Button>
 
-                <div className="flex items-center my-4">
-                  <Separator className="flex-1" />
-                  <span className="px-2 text-muted-foreground text-sm">or</span>
-                  <Separator className="flex-1" />
-                </div>
-
-                <div className="text-center">
-                  <Button className="text-sm">Scan QR Code</Button>
-                </div>
-
-                {otpValidated && <p className="text-blue-600 text-sm text-center">OTP validated successfully.</p>}
+                {operation === "checkin" && (
+                  <>
+                    <div className="flex items-center my-4">
+                      <Separator className="flex-1" />
+                      <span className="px-2 text-muted-foreground text-sm">or</span>
+                      <Separator className="flex-1" />
+                    </div>
+                    <div className="text-center">
+                      <Button className="text-sm">Scan QR Code</Button>
+                    </div>
+                  </>
+                )}
               </div>
             </TabsContent>
 
@@ -157,8 +249,8 @@ export default function GuardView() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Visitor Request Logs</h3>
-                  <Button onClick={fetchLogs} size="sm">
-                     Refresh Logs
+                  <Button onClick={fetchLogs} size="icon" variant="ghost">
+                     <RefreshCw className={`h-4 w-4 ${loadingLogs ? "animate-spin" : ""}`} />
                   </Button>
                 </div>
 

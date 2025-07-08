@@ -75,6 +75,9 @@ enum VisitorStatus {
 
 enum AlertType {
   TIMEOUT
-  ENTRY
+  REQUESTED
+  SCHEDULED
+  CHECKED_IN
+  DENIED
   EXIT
 }
