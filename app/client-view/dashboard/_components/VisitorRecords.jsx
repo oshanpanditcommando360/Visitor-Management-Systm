@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import QRCode from "react-qr-code";
 import { getAllVisitorRecords } from "@/actions/client";
 import { toast } from "sonner";
 
@@ -63,6 +71,7 @@ export default function VisitorRecords() {
                   <th className="p-2 border-b font-medium">Actual CheckOut</th>
                   <th className="p-2 border-b font-medium">Added By</th>
                   <th className="p-2 border-b font-medium">Status</th>
+                  <th className="p-2 border-b font-medium">QR</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -79,6 +88,23 @@ export default function VisitorRecords() {
                       <Badge variant={getBadgeVariant(visitor.status)} className="text-xs">
                         {visitor.status}
                       </Badge>
+                    </td>
+                    <td className="p-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="icon" variant="ghost">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="text-center">
+                          <DialogHeader>
+                            <DialogTitle>Visitor QR</DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-4 flex justify-center">
+                            <QRCode value={visitor.id} />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </td>
                   </tr>
                 ))}
