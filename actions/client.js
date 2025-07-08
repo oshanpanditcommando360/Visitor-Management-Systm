@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { createAlert } from "./alert";
 
 export const createClient = async (clientData) => {
     try {
@@ -42,12 +43,13 @@ export const signInClient = async ({ email, password }) => {
     }
 }
 
-export const getPendingVisitorRequests = async () => {
+export const getPendingVisitorRequests = async (clientId) => {
   try {
     const visitors = await db.visitor.findMany({
       where: {
         status: "PENDING",
         requestedByGuard: true,
+        clientId,
       },
       orderBy: {
         createdAt: "desc",
@@ -66,17 +68,21 @@ export const approveVisitorRequest = async ({ visitorId, durationHours, duration
     const now = new Date();
     const scheduledExit = new Date(now.getTime() + durationHours * 60 * 60 * 1000 + durationMinutes * 60 * 1000);
 
-    await db.visitor.update({
-      where: {
-        id: visitorId,
-      },
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
       data: {
-        status: "CHECKED_IN", // or "APPROVED" if you have such a status
+        status: "CHECKED_IN",
         scheduledEntry: now,
         scheduledExit: scheduledExit,
-        checkInTime:now,
-        approvedByClient:true,     
+        checkInTime: now,
+        approvedByClient: true,
       },
+    });
+
+    await createAlert({
+      visitorId: visitor.id,
+      type: "ENTRY",
+      message: `${visitor.name} checked in`,
     });
 
     return { success: true };
@@ -125,6 +131,11 @@ export const addVisitorByClient = async ({
         status: "APPROVED",
       },
     });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "ENTRY",
+      message: `${visitor.name} visit scheduled`,
+    });
 
     return visitor;
   } catch (err) {
@@ -133,9 +144,10 @@ export const addVisitorByClient = async ({
   }
 };
 
-export const getAllVisitorRecords = async () => {
+export const getAllVisitorRecords = async (clientId) => {
   try {
     const visitors = await db.visitor.findMany({
+      where: { clientId },
       orderBy: {
         createdAt: "desc",
       },

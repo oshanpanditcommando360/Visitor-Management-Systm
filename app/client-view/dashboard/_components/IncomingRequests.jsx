@@ -22,7 +22,8 @@ export default function IncomingRequests() {
 
   const fetchRequests = async () => {
     try {
-      const data = await getPendingVisitorRequests();
+      const client = JSON.parse(localStorage.getItem("clientInfo"));
+      const data = await getPendingVisitorRequests(client?.clientId);
       setRequests(data);
     } catch (err) {
       toast.error("Failed to fetch visitor requests.");
@@ -31,6 +32,8 @@ export default function IncomingRequests() {
 
   useEffect(() => {
     fetchRequests();
+    const interval = setInterval(fetchRequests, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleChange = (field, value) => {
@@ -77,7 +80,10 @@ export default function IncomingRequests() {
   return (
     <Card>
       <CardContent className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Visit Requests</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Visit Requests</h2>
+          <Button size="sm" onClick={fetchRequests}>Refresh</Button>
+        </div>
         {requests.length > 0 ? (
           <div className="flex flex-col space-y-3 max-h-96 overflow-y-auto pr-2">
             {requests.map((item, idx) => (

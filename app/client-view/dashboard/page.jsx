@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import IncomingRequests from "./_components/IncomingRequests";
 import AddVisitor from "./_components/AddVisitor";
@@ -8,7 +8,12 @@ import Alerts from "./_components/Alerts";
 
 export default function ClientDashboard() {
   const [activeSection, setActiveSection] = useState("requests");
-  const clientData = JSON.parse(localStorage.getItem("clientInfo"));
+  const [clientData, setClientData] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("clientInfo");
+    if (stored) setClientData(JSON.parse(stored));
+  }, []);
 
   const dummyRequests = ["Visitor A - 10:00 AM", "Visitor B - 11:30 AM", "Visitor F - 12:00 PM"];
   const dummyApprovals = ["Visitor C", "Visitor G"];
@@ -29,6 +34,8 @@ export default function ClientDashboard() {
         return null;
     }
   };
+
+  if (!clientData) return null;
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">

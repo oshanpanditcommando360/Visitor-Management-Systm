@@ -1,5 +1,6 @@
 "use server";
 import { db } from "@/lib/prisma";
+import { createAlert } from "./alert";
 
 export const visitRequestByGuard = async (visitData) => {
   try {
@@ -11,6 +12,11 @@ export const visitRequestByGuard = async (visitData) => {
         requestedByGuard: true,
         status: "PENDING",
       },
+    });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "ENTRY",
+      message: `${visitor.name} visit requested`,
     });
     return visitor;
   } catch (error) {

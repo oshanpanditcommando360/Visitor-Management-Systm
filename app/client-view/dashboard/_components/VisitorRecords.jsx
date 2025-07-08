@@ -1,23 +1,26 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getAllVisitorRecords } from "@/actions/client";
 import { toast } from "sonner";
 
 export default function VisitorRecords() {
   const [records, setRecords] = useState([]);
+  const fetchRecords = async () => {
+    try {
+      const client = JSON.parse(localStorage.getItem("clientInfo"));
+      const data = await getAllVisitorRecords(client?.clientId);
+      setRecords(data);
+    } catch (err) {
+      toast.error("Failed to load visitor records.");
+    }
+  };
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const data = await getAllVisitorRecords();
-        setRecords(data);
-      } catch (err) {
-        toast.error("Failed to load visitor records.");
-      }
-    };
-
     fetchRecords();
+    const interval = setInterval(fetchRecords, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const getBadgeVariant = (status) => {
@@ -36,7 +39,10 @@ export default function VisitorRecords() {
   return (
     <Card className="overflow-scroll">
       <CardContent className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Visitor Records</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Visitor Records</h3>
+          <Button size="sm" onClick={fetchRecords}>Refresh</Button>
+        </div>
         {records.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left border-collapse">
