@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  phone     String
+  password  String
+  visitors  Visitor[] @relation("ClientVisitors")
+  createdAt DateTime  @default(now())
+}
+
+model Visitor {
+  id                      String    @id @default(uuid())
+  name                    String
+  purpose                 String
+  phone                   String?
+  scheduledEntry          DateTime?
+  scheduledExit           DateTime?
+  checkInTime             DateTime?
+  checkOutTime            DateTime?
+  requestedByGuard        Boolean      @default(false) 
+  approvedByClient        Boolean?
+  status                  VisitorStatus @default(PENDING)
+  clientId                String
+  client                  Client    @relation("ClientVisitors", fields: [clientId], references: [id])
+  otp                     Otp?
+  alerts                  Alert[]
+  createdAt               DateTime @default(now())
+}
+
+model Otp {
+  id          String   @id @default(uuid())
+  code        String
+  visitorId   String   @unique
+  expiresAt   DateTime
+  isUsed      Boolean  @default(false)
+  visitor     Visitor  @relation(fields: [visitorId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Alert {
+  id          String   @id @default(uuid())
+  visitorId   String
+  type        AlertType
+  message     String
+  triggeredAt DateTime @default(now())
+  visitor     Visitor  @relation(fields: [visitorId], references: [id])
+}
+
+enum VisitorStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CHECKED_IN
+  CHECKED_OUT
+  OVERSTAYED
+  EXPIRED
+}
+
+enum AlertType {
+  TIMEOUT
+  ENTRY
+  EXIT
+}
