@@ -22,10 +22,6 @@ export default function ClientDashboard() {
     if (activeSection === "requests") setNewRequests(false);
   }, [activeSection]);
 
-  const dummyRequests = ["Visitor A - 10:00 AM", "Visitor B - 11:30 AM", "Visitor F - 12:00 PM"];
-  const dummyApprovals = ["Visitor C", "Visitor G"];
-  const dummyRecords = ["Visitor D - 5 visits", "Visitor E - 3 visits"];
-  const dummyAlerts = [];
 
   const renderSection = () => {
     switch (activeSection) {

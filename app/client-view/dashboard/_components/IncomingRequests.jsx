@@ -21,6 +21,7 @@ export default function IncomingRequests({ onNew }) {
   const [selectedVisitor, setSelectedVisitor] = useState(null);
   const [popupIndex, setPopupIndex] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const prevCount = useRef(0);
 
   const fetchRequests = async () => {
@@ -60,6 +61,7 @@ export default function IncomingRequests({ onNew }) {
   };
 
   const handleApprove = async () => {
+    setActionLoading(true);
     try {
       const durationHours = parseInt(durations.hours) || 0;
       const durationMinutes = parseInt(durations.minutes) || 0;
@@ -72,18 +74,23 @@ export default function IncomingRequests({ onNew }) {
       fetchRequests();
     } catch (err) {
       toast.error("Failed to approve visitor.");
+    } finally {
+      setActionLoading(false);
+      setSelectedVisitor(null);
+      setPopupIndex(null);
     }
-    setSelectedVisitor(null);
-    setPopupIndex(null);
   };
 
   const handleDeny = async (item) => {
+    setActionLoading(true);
     try {
       await denyVisitorRequest(item.id);
       toast.success("Visitor denied.");
       fetchRequests();
     } catch (err) {
       toast.error("Failed to deny visitor.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -142,7 +149,9 @@ export default function IncomingRequests({ onNew }) {
                         />
                       </div>
                       <DialogFooter className="mt-4">
-                        <Button onClick={handleApprove}>Add Visitor</Button>
+                        <Button onClick={handleApprove} disabled={actionLoading}>
+                          {actionLoading ? "Processing..." : "Add Visitor"}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -150,8 +159,9 @@ export default function IncomingRequests({ onNew }) {
                     size="sm"
                     variant="destructive"
                     onClick={() => handleDeny(item)}
+                    disabled={actionLoading}
                   >
-                    Deny
+                    {actionLoading ? "Processing..." : "Deny"}
                   </Button>
                 </div>
               </div>

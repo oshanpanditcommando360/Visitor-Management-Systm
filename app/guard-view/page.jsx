@@ -22,8 +22,8 @@ export default function GuardView() {
   const [request, setRequest] = useState({ name: "", purpose: "", clientId: "" });
   const [selectedVisitor, setSelectedVisitor] = useState("");
   const [otp, setOtp] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [otpValidated, setOtpValidated] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const [logs, setLogs] = useState([]);
   const [scheduled, setScheduled] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -69,20 +69,30 @@ export default function GuardView() {
   const handleRequestSubmit = async () => {
     const client = JSON.parse(localStorage.getItem("clientInfo"));
     request.clientId = client.clientId;
-    const visitor = await visitRequestByGuard(request);
-    setSubmitted(true);
+    setRequestLoading(true);
+    try {
+      await visitRequestByGuard(request);
+      toast.success("Visit request raised successfully.");
+      setRequest({ name: "", purpose: "", clientId: "" });
+    } catch (err) {
+      toast.error("Failed to raise visit request.");
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
   const handleOtpValidation = async () => {
+    setOtpLoading(true);
     try {
       await validateVisitor({ visitorId: selectedVisitor, otp });
       toast.success("Visitor validated");
       setOtp("");
       setSelectedVisitor("");
-      setOtpValidated(true);
       fetchLogs();
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -126,12 +136,11 @@ export default function GuardView() {
                 </div>
                 <Button
                   onClick={handleRequestSubmit}
-                  disabled={!request.name || !request.purpose}
+                  disabled={!request.name || !request.purpose || requestLoading}
                   className="w-full text-md"
                 >
-                  Submit Request
+                  {requestLoading ? "Submitting..." : "Submit Request"}
                 </Button>
-                {submitted && <p className="text-green-600 text-sm text-center">Visit request raised successfully.</p>}
               </div>
             </TabsContent>
 
@@ -164,10 +173,10 @@ export default function GuardView() {
 
                 <Button
                   onClick={handleOtpValidation}
-                  disabled={!selectedVisitor || !otp}
+                  disabled={!selectedVisitor || !otp || otpLoading}
                   className="w-full text-md"
                 >
-                  Validate OTP
+                  {otpLoading ? "Validating..." : "Validate OTP"}
                 </Button>
 
                 <div className="flex items-center my-4">
@@ -179,8 +188,6 @@ export default function GuardView() {
                 <div className="text-center">
                   <Button className="text-sm">Scan QR Code</Button>
                 </div>
-
-                {otpValidated && <p className="text-blue-600 text-sm text-center">OTP validated successfully.</p>}
               </div>
             </TabsContent>
 
