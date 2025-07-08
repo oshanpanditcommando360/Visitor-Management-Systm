@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, CheckCircle, LogOut, AlertTriangle } from "lucide-react";
+import { Info, CheckCircle, LogOut, AlertTriangle, RefreshCw } from "lucide-react";
 import { getClientAlerts } from "@/actions/alert";
 import { toast } from "sonner";
 
@@ -30,16 +30,25 @@ const alertVariants = {
   },
 };
 
-export default function Alerts() {
+export default function Alerts({ onNew }) {
   const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const prevCount = useRef(0);
 
   const fetchAlerts = async () => {
+    setLoading(true);
     try {
       const client = JSON.parse(localStorage.getItem("clientInfo"));
       const data = await getClientAlerts(client?.clientId);
       setAlerts(data);
+      if (onNew && data.length > prevCount.current) {
+        onNew(true);
+      }
+      prevCount.current = data.length;
     } catch (err) {
       toast.error("Failed to fetch alerts.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,7 +63,9 @@ export default function Alerts() {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Alerts</h2>
-          <Button size="sm" onClick={fetchAlerts}>Refresh</Button>
+          <Button size="icon" variant="ghost" onClick={fetchAlerts}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
         </div>
         {alerts.length > 0 ? (
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">

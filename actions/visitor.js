@@ -39,3 +39,35 @@ export const getVisitorLogsForGuard = async () => {
   }
 };
 
+export const getScheduledVisitors = async () => {
+  try {
+    return await db.visitor.findMany({
+      where: { requestedByGuard: false, status: "APPROVED" },
+      orderBy: { scheduledEntry: "asc" },
+      select: { id: true, name: true },
+    });
+  } catch (error) {
+    console.error("Failed to fetch scheduled visitors", error);
+    throw new Error("Unable to fetch scheduled visitors.");
+  }
+};
+
+export const validateVisitor = async ({ visitorId, otp }) => {
+  if (otp !== "1234") throw new Error("Invalid OTP");
+  try {
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
+      data: { status: "CHECKED_IN", checkInTime: new Date() },
+    });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "ENTRY",
+      message: `${visitor.name} validated at gate`,
+    });
+    return visitor;
+  } catch (error) {
+    console.error("Failed to validate visitor", error);
+    throw new Error("Unable to validate visitor.");
+  }
+};
+

@@ -159,6 +159,7 @@ export const getAllVisitorRecords = async (clientId) => {
         scheduledExit: true,
         checkInTime: true,
         checkOutTime: true,
+        requestedByGuard: true,
         status: true,
         createdAt: true,
       },
@@ -168,10 +169,22 @@ export const getAllVisitorRecords = async (clientId) => {
       id: visitor.id,
       name: visitor.name,
       purpose: visitor.purpose,
-      date: visitor.scheduledEntry?.toLocaleDateString() ?? "-",
-      checkInTime: visitor.checkInTime ? new Date(visitor.checkInTime).toLocaleTimeString() : "-",
-      scheduledCheckOut: visitor.scheduledExit ? new Date(visitor.scheduledExit).toLocaleTimeString() : "-",
-      actualCheckOutTime: visitor.checkOutTime ? new Date(visitor.checkOutTime).toLocaleTimeString() : "-",
+      date: visitor.requestedByGuard
+        ? new Date(visitor.createdAt).toLocaleDateString()
+        : visitor.scheduledEntry?.toLocaleDateString() ?? "-",
+      scheduledCheckIn: visitor.scheduledEntry
+        ? new Date(visitor.scheduledEntry).toLocaleTimeString()
+        : "-",
+      scheduledCheckOut: visitor.scheduledExit
+        ? new Date(visitor.scheduledExit).toLocaleTimeString()
+        : "-",
+      checkInTime: visitor.checkInTime
+        ? new Date(visitor.checkInTime).toLocaleTimeString()
+        : "-",
+      checkOutTime: visitor.checkOutTime
+        ? new Date(visitor.checkOutTime).toLocaleTimeString()
+        : "-",
+      addedBy: visitor.requestedByGuard ? "Guard" : "Client",
       status:
         visitor.status === "PENDING" && !visitor.scheduledEntry
           ? "Not Checked In"

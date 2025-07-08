@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -14,19 +15,28 @@ import {
 import { getPendingVisitorRequests,approveVisitorRequest,denyVisitorRequest } from "@/actions/client";
 import { toast } from "sonner";
 
-export default function IncomingRequests() {
+export default function IncomingRequests({ onNew }) {
   const [requests, setRequests] = useState([]);
   const [durations, setDurations] = useState({});
   const [selectedVisitor, setSelectedVisitor] = useState(null);
   const [popupIndex, setPopupIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const prevCount = useRef(0);
 
   const fetchRequests = async () => {
+    setLoading(true);
     try {
       const client = JSON.parse(localStorage.getItem("clientInfo"));
       const data = await getPendingVisitorRequests(client?.clientId);
       setRequests(data);
+      if (onNew && data.length > prevCount.current) {
+        onNew(true);
+      }
+      prevCount.current = data.length;
     } catch (err) {
       toast.error("Failed to fetch visitor requests.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,7 +92,9 @@ export default function IncomingRequests() {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Visit Requests</h2>
-          <Button size="sm" onClick={fetchRequests}>Refresh</Button>
+          <Button size="icon" variant="ghost" onClick={fetchRequests}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
         </div>
         {requests.length > 0 ? (
           <div className="flex flex-col space-y-3 max-h-96 overflow-y-auto pr-2">

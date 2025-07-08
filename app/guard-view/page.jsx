@@ -7,14 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { visitRequestByGuard } from "@/actions/visitor";
-import { getVisitorLogsForGuard } from "@/actions/visitor";
+import {
+  visitRequestByGuard,
+  getVisitorLogsForGuard,
+  getScheduledVisitors,
+  validateVisitor,
+} from "@/actions/visitor";
 import { toast } from "sonner";
-
-const mockVisitors = [
-  { id: "v1", name: "Michael Scott" },
-  { id: "v2", name: "Pam Beesly" },
-];
+import { RefreshCw } from "lucide-react";
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 
@@ -25,20 +25,43 @@ export default function GuardView() {
   const [submitted, setSubmitted] = useState(false);
   const [otpValidated, setOtpValidated] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [scheduled, setScheduled] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [loadingScheduled, setLoadingScheduled] = useState(false);
 
 
   const fetchLogs = async () => {
+    setLoadingLogs(true);
     try {
       const data = await getVisitorLogsForGuard();
-      console.log(data);
       setLogs(data);
     } catch (err) {
       toast.error("Failed to load logs.");
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
+  const fetchScheduled = async () => {
+    setLoadingScheduled(true);
+    try {
+      const data = await getScheduledVisitors();
+      setScheduled(data);
+    } catch (err) {
+      toast.error("Failed to load visitors.");
+    } finally {
+      setLoadingScheduled(false);
     }
   };
 
   useEffect(() => {
     fetchLogs();
+    fetchScheduled();
+    const interval = setInterval(() => {
+      fetchLogs();
+      fetchScheduled();
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
 
@@ -50,9 +73,17 @@ export default function GuardView() {
     setSubmitted(true);
   };
 
-  const handleOtpValidation = () => {
-    console.log("OTP Submitted:", { visitor: selectedVisitor, otp });
-    setOtpValidated(true);
+  const handleOtpValidation = async () => {
+    try {
+      await validateVisitor({ visitorId: selectedVisitor, otp });
+      toast.success("Visitor validated");
+      setOtp("");
+      setSelectedVisitor("");
+      setOtpValidated(true);
+      fetchLogs();
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   return (
@@ -113,8 +144,8 @@ export default function GuardView() {
                       <SelectValue placeholder="Choose visitor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockVisitors.map((visitor) => (
-                        <SelectItem key={visitor.id} value={visitor.name}>
+                      {scheduled.map((visitor) => (
+                        <SelectItem key={visitor.id} value={visitor.id}>
                           {visitor.name}
                         </SelectItem>
                       ))}
@@ -157,8 +188,8 @@ export default function GuardView() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Visitor Request Logs</h3>
-                  <Button onClick={fetchLogs} size="sm">
-                     Refresh Logs
+                  <Button onClick={fetchLogs} size="icon" variant="ghost">
+                     <RefreshCw className={`h-4 w-4 ${loadingLogs ? "animate-spin" : ""}`} />
                   </Button>
                 </div>
 
