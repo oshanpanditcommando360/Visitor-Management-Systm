@@ -113,7 +113,7 @@ export const addVisitorByClient = async ({
   clientId,
 }) => {
   try {
-    const visitor = await prisma.visitor.create({
+    const visitor = await db.visitor.create({
       data: {
         name,
         purpose,
@@ -135,7 +135,7 @@ export const addVisitorByClient = async ({
 
 export const getAllVisitorRecords = async () => {
   try {
-    const visitors = await prisma.visitor.findMany({
+    const visitors = await db.visitor.findMany({
       orderBy: {
         createdAt: "desc",
       },
