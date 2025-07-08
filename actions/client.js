@@ -81,7 +81,7 @@ export const approveVisitorRequest = async ({ visitorId, durationHours, duration
 
     await createAlert({
       visitorId: visitor.id,
-      type: "ENTRY",
+      type: "CHECKED_IN",
       message: `${visitor.name} checked in`,
     });
 
@@ -94,13 +94,15 @@ export const approveVisitorRequest = async ({ visitorId, durationHours, duration
 
 export const denyVisitorRequest = async (visitorId) => {
   try {
-    await db.visitor.update({
-      where: {
-        id: visitorId,
-      },
-      data: {
-        status: "DENIED", 
-      },
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
+      data: { status: "DENIED" },
+    });
+
+    await createAlert({
+      visitorId: visitor.id,
+      type: "DENIED",
+      message: `${visitor.name} visit denied`,
     });
 
     return { success: true };
@@ -133,7 +135,7 @@ export const addVisitorByClient = async ({
     });
     await createAlert({
       visitorId: visitor.id,
-      type: "ENTRY",
+      type: "SCHEDULED",
       message: `${visitor.name} visit scheduled`,
     });
 

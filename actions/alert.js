@@ -35,3 +35,13 @@ export const getClientAlerts = async (clientId) => {
     throw new Error("Failed to fetch alerts.");
   }
 };
+
+export const deleteAlert = async (id) => {
+  try {
+    await db.alert.delete({ where: { id } });
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting alert:", error);
+    throw new Error("Failed to delete alert.");
+  }
+};

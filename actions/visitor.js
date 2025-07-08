@@ -15,7 +15,7 @@ export const visitRequestByGuard = async (visitData) => {
     });
     await createAlert({
       visitorId: visitor.id,
-      type: "ENTRY",
+      type: "REQUESTED",
       message: `${visitor.name} visit requested`,
     });
     return visitor;
@@ -28,7 +28,12 @@ export const visitRequestByGuard = async (visitData) => {
 export const getVisitorLogsForGuard = async () => {
   try {
     const visitors = await db.visitor.findMany({
-      where: { requestedByGuard:true },
+      where: {
+        OR: [
+          { requestedByGuard: true },
+          { checkInTime: { not: null } },
+        ],
+      },
       orderBy: { createdAt: "desc" },
       take: 10,
     });
@@ -61,7 +66,7 @@ export const validateVisitor = async ({ visitorId, otp }) => {
     });
     await createAlert({
       visitorId: visitor.id,
-      type: "ENTRY",
+      type: "CHECKED_IN",
       message: `${visitor.name} validated at gate`,
     });
     return visitor;

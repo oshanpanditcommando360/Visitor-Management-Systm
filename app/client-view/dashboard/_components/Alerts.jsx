@@ -3,15 +3,30 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, CheckCircle, LogOut, AlertTriangle, RefreshCw } from "lucide-react";
-import { getClientAlerts } from "@/actions/alert";
+import { Info, CheckCircle, LogOut, AlertTriangle, RefreshCw, X } from "lucide-react";
+import { getClientAlerts, deleteAlert } from "@/actions/alert";
 import { toast } from "sonner";
 
 const alertVariants = {
-  ENTRY: {
+  REQUESTED: {
+    icon: <Info className="h-5 w-5 text-yellow-500" />,
+    title: "Visitor Requested a Visit",
+    color: "border-yellow-500 bg-yellow-50",
+  },
+  SCHEDULED: {
+    icon: <Info className="h-5 w-5 text-blue-500" />,
+    title: "Visit Approved",
+    color: "border-blue-500 bg-blue-50",
+  },
+  CHECKED_IN: {
     icon: <CheckCircle className="h-5 w-5 text-green-500" />,
     title: "Visitor Checked In",
     color: "border-green-500 bg-green-50",
+  },
+  DENIED: {
+    icon: <AlertTriangle className="h-5 w-5 text-red-600" />,
+    title: "Visit Denied",
+    color: "border-red-600 bg-red-50",
   },
   EXIT: {
     icon: <LogOut className="h-5 w-5 text-blue-500" />,
@@ -52,6 +67,15 @@ export default function Alerts({ onNew }) {
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await deleteAlert(id);
+      fetchAlerts();
+    } catch {
+      toast.error("Failed to delete alert.");
+    }
+  };
+
   useEffect(() => {
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 10000);
@@ -72,12 +96,15 @@ export default function Alerts({ onNew }) {
             {alerts.map((alert) => {
               const variant = alertVariants[alert.type] || alertVariants.DEFAULT;
               return (
-                <Alert key={alert.id} className={`flex items-start gap-3 ${variant.color}`}> 
+                <Alert key={alert.id} className={`flex items-start gap-3 ${variant.color}`}>
                   <div className="mt-1">{variant.icon}</div>
-                  <div>
+                  <div className="flex-1">
                     <AlertTitle>{variant.title}</AlertTitle>
                     <AlertDescription>{alert.message}</AlertDescription>
                   </div>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(alert.id)}>
+                    <X className="h-4 w-4" />
+                  </Button>
                 </Alert>
               );
             })}
