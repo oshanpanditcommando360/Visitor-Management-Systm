@@ -14,9 +14,22 @@ import {
     getCheckedInVisitors,
     validateVisitor,
     checkoutVisitor,
+    checkInVisitorByQr,
   } from "@/actions/visitor";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
+import dynamic from "next/dynamic";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+const BarcodeScanner = dynamic(
+  () => import("react-qr-barcode-scanner"),
+  { ssr: false }
+);
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 
@@ -33,6 +46,8 @@ export default function GuardView() {
   const [loadingScheduled, setLoadingScheduled] = useState(false);
   const [loadingCheckedIn, setLoadingCheckedIn] = useState(false);
   const [operation, setOperation] = useState("checkin");
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanProcessing, setScanProcessing] = useState(false);
 
 
   const fetchLogs = async () => {
@@ -119,6 +134,24 @@ export default function GuardView() {
       toast.error(err.message);
     } finally {
       setOtpLoading(false);
+    }
+  };
+
+  const handleQrUpdate = async (err, result) => {
+    if (result && !scanProcessing) {
+      setScanProcessing(true);
+      setShowScanner(false);
+      try {
+        await checkInVisitorByQr(result.text);
+        toast.success("Visitor validated");
+        fetchLogs();
+        fetchScheduled();
+        fetchCheckedIn();
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setScanProcessing(false);
+      }
     }
   };
 
@@ -238,7 +271,23 @@ export default function GuardView() {
                       <Separator className="flex-1" />
                     </div>
                     <div className="text-center">
-                      <Button className="text-sm">Scan QR Code</Button>
+                      <Dialog open={showScanner} onOpenChange={setShowScanner}>
+                        <DialogTrigger asChild>
+                          <Button className="text-sm">Scan QR Code</Button>
+                        </DialogTrigger>
+                        <DialogContent className="text-center">
+                          <DialogHeader>
+                            <DialogTitle>Scan Visitor QR</DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-4 flex justify-center">
+                            <BarcodeScanner
+                              width={300}
+                              height={300}
+                              onUpdate={handleQrUpdate}
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </>
                 )}

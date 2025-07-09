@@ -107,3 +107,21 @@ export const checkoutVisitor = async (visitorId) => {
   }
 };
 
+export const checkInVisitorByQr = async (visitorId) => {
+  try {
+    const visitor = await db.visitor.update({
+      where: { id: visitorId },
+      data: { status: "CHECKED_IN", checkInTime: new Date() },
+    });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "CHECKED_IN",
+      message: `${visitor.name} validated by QR`,
+    });
+    return visitor;
+  } catch (error) {
+    console.error("Failed to validate visitor via QR", error);
+    throw new Error("Unable to validate visitor via QR.");
+  }
+};
+
