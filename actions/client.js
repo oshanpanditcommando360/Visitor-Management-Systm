@@ -181,6 +181,9 @@ export const getAllVisitorRecords = async (clientId) => {
       scheduledCheckOut: visitor.scheduledExit
         ? new Date(visitor.scheduledExit).toLocaleTimeString()
         : "-",
+      checkInDate: visitor.checkInTime
+        ? new Date(visitor.checkInTime).toLocaleDateString()
+        : "-",
       checkInTime: visitor.checkInTime
         ? new Date(visitor.checkInTime).toLocaleTimeString()
         : "-",
