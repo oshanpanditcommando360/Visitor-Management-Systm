@@ -47,7 +47,7 @@ export const getVisitorLogsForGuard = async () => {
 export const getScheduledVisitors = async () => {
   try {
     return await db.visitor.findMany({
-      where: { requestedByGuard: false, status: "APPROVED" },
+      where: { requestedByGuard: false, status: "SCHEDULED" },
       orderBy: { scheduledEntry: "asc" },
       select: { id: true, name: true },
     });
@@ -109,6 +109,19 @@ export const checkoutVisitor = async (visitorId) => {
 
 export const checkInVisitorByQr = async (visitorId) => {
   try {
+    const existing = await db.visitor.findUnique({ where: { id: visitorId } });
+    if (!existing) {
+      throw new Error("Invalid QR code");
+    }
+
+    if (existing.status === "CHECKED_OUT") {
+      throw new Error("This QR has expired.");
+    }
+
+    if (existing.status === "CHECKED_IN") {
+      throw new Error("Already checked in with this QR.");
+    }
+
     const visitor = await db.visitor.update({
       where: { id: visitorId },
       data: { status: "CHECKED_IN", checkInTime: new Date() },

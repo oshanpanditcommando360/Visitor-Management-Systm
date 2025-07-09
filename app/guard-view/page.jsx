@@ -127,6 +127,7 @@ export default function GuardView() {
         toast.success("Visitor checked out");
       }
       setSelectedVisitor("");
+      setOperation("checkin");
       fetchLogs();
       fetchScheduled();
       fetchCheckedIn();

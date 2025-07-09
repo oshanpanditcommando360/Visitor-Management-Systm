@@ -14,6 +14,7 @@ export const createClient = async (clientData) => {
                 email: clientData.email,
                 phone: clientData.phone,
                 password: hashedPassword,
+                department: clientData.department,
             },
         });
 
@@ -130,7 +131,7 @@ export const addVisitorByClient = async ({
         clientId,
         phone,
         requestedByGuard: false,
-        status: "APPROVED",
+        status: "SCHEDULED",
       },
     });
     await createAlert({
