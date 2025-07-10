@@ -21,6 +21,7 @@ model Client {
   email     String    @unique
   phone     String
   password  String
+  department Department
   visitors  Visitor[] @relation("ClientVisitors")
   createdAt DateTime  @default(now())
 }
@@ -65,6 +66,7 @@ model Alert {
 
 enum VisitorStatus {
   PENDING
+  SCHEDULED
   APPROVED
   DENIED
   CHECKED_IN
@@ -80,4 +82,12 @@ enum AlertType {
   CHECKED_IN
   DENIED
   EXIT
+}
+
+enum Department {
+  FINANCE
+  ADMIN
+  HR
+  IT
+  OPERATIONS
 }

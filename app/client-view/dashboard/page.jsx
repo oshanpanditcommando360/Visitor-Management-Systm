@@ -47,6 +47,7 @@ export default function ClientDashboard() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Welcome, {clientData.name}</h1>
           <p className="text-gray-600 text-sm md:text-base">{clientData.email}</p>
+          <p className="text-gray-600 text-sm md:text-base">Department: {clientData.department}</p>
         </div>
         <div className="text-gray-600 text-sm md:text-base">
           <span className="font-medium">Phone:</span> {clientData.phone}

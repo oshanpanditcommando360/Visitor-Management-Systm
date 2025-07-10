@@ -14,6 +14,7 @@ export const createClient = async (clientData) => {
                 email: clientData.email,
                 phone: clientData.phone,
                 password: hashedPassword,
+                department: clientData.department,
             },
         });
 
@@ -130,7 +131,7 @@ export const addVisitorByClient = async ({
         clientId,
         phone,
         requestedByGuard: false,
-        status: "APPROVED",
+        status: "SCHEDULED",
       },
     });
     await createAlert({
@@ -179,6 +180,9 @@ export const getAllVisitorRecords = async (clientId) => {
         : "-",
       scheduledCheckOut: visitor.scheduledExit
         ? new Date(visitor.scheduledExit).toLocaleTimeString()
+        : "-",
+      checkInDate: visitor.checkInTime
+        ? new Date(visitor.checkInTime).toLocaleDateString()
         : "-",
       checkInTime: visitor.checkInTime
         ? new Date(visitor.checkInTime).toLocaleTimeString()

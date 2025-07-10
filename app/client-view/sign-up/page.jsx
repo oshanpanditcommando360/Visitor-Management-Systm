@@ -8,6 +8,7 @@ import { createClient } from "@/actions/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 const fields = [
   { name: "name", placeholder: "Full Name", type: "text" },
@@ -17,6 +18,8 @@ const fields = [
   { name: "confirmPassword", placeholder: "Confirm Password", type: "password" },
 ];
 
+const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+
 export default function ClientSignUp() {
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +27,7 @@ export default function ClientSignUp() {
     phone: "",
     password: "",
     confirmPassword: "",
+    department: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,9 +41,9 @@ export default function ClientSignUp() {
   const handleSubmit = async () => {
     setError("");
 
-    const { name, email, phone, password, confirmPassword } = formData;
+    const { name, email, phone, password, confirmPassword, department } = formData;
 
-    if (!name || !email || !phone || !password || !confirmPassword) {
+    if (!name || !email || !phone || !password || !confirmPassword || !department) {
       return setError("All fields are required.");
     }
 
@@ -49,7 +53,7 @@ export default function ClientSignUp() {
 
     setLoading(true);
     try {
-      const client = await createClient({ name, email, phone, password });
+      const client = await createClient({ name, email, phone, password, department });
 
       if (!client || client.error) {
         throw new Error(client?.error || "Failed to create client.");
@@ -85,6 +89,19 @@ export default function ClientSignUp() {
               required
             />
           ))}
+
+          <Select onValueChange={(value) => setFormData((p) => ({ ...p, department: value }))}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Department" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map((dep) => (
+                <SelectItem key={dep} value={dep}>
+                  {dep}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Button className="w-full" onClick={handleSubmit} disabled={loading}>
             {loading ? "Creating..." : "Sign Up"}

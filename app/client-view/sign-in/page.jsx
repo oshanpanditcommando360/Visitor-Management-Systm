@@ -36,7 +36,8 @@ export default function ClientSignIn() {
                 name: res.name,
                 email: res.email,
                 phone: res.phone,
-                clientId:res.id
+                clientId:res.id,
+                department: res.department,
             }));
 
             router.push("/client-view/dashboard");

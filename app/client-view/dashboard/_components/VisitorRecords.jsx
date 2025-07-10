@@ -67,6 +67,7 @@ export default function VisitorRecords() {
                   <th className="p-2 border-b font-medium">Date</th>
                   <th className="p-2 border-b font-medium">Scheduled CheckIn</th>
                   <th className="p-2 border-b font-medium">Scheduled Checkout</th>
+                  <th className="p-2 border-b font-medium">Actual CheckIn Date</th>
                   <th className="p-2 border-b font-medium">Actual CheckIn</th>
                   <th className="p-2 border-b font-medium">Actual CheckOut</th>
                   <th className="p-2 border-b font-medium">Added By</th>
@@ -81,6 +82,7 @@ export default function VisitorRecords() {
                     <td className="p-2">{visitor.date}</td>
                     <td className="p-2">{visitor.scheduledCheckIn}</td>
                     <td className="p-2">{visitor.scheduledCheckOut}</td>
+                    <td className="p-2">{visitor.checkInDate}</td>
                     <td className="p-2">{visitor.checkInTime}</td>
                     <td className="p-2">{visitor.checkOutTime}</td>
                     <td className="p-2">{visitor.addedBy}</td>
