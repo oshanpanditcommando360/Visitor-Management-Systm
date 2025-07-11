@@ -229,6 +229,7 @@ export const getAllVisitorRecords = async (clientId) => {
         endUserName: true,
         endUserId: true,
         approvedByClient: true,
+        vehicleImage: true,
         status: true,
         createdAt: true,
       },
@@ -237,6 +238,7 @@ export const getAllVisitorRecords = async (clientId) => {
     return visitors.map((visitor) => ({
       id: visitor.id,
       name: visitor.name,
+      vehicleImage: visitor.vehicleImage ?? null,
       purpose: visitor.purpose,
       department: visitor.department ?? "-",
       endUserName: visitor.endUserName ?? "-",

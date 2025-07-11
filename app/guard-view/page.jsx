@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import dynamic from "next/dynamic";
+import Webcam from "react-webcam";
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,10 @@ const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function GuardView() {
-  const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "" });
+  const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "", vehicleImage: "" });
   const [selectedVisitor, setSelectedVisitor] = useState("");
   const [otp, setOtp] = useState("");
+  const [validationPlate, setValidationPlate] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [logs, setLogs] = useState([]);
@@ -50,6 +52,9 @@ export default function GuardView() {
   const [operation, setOperation] = useState("checkin");
   const [showScanner, setShowScanner] = useState(false);
   const [scanProcessing, setScanProcessing] = useState(false);
+  const [showPlateScanner, setShowPlateScanner] = useState(false);
+  const [showCheckPlateScanner, setShowCheckPlateScanner] = useState(false);
+  const webcamRef = useRef(null);
 
 
   const fetchLogs = async () => {
@@ -102,6 +107,7 @@ export default function GuardView() {
 
 
 
+
   const handleRequestSubmit = async () => {
     const client = JSON.parse(localStorage.getItem("clientInfo"));
     request.clientId = client.clientId;
@@ -109,7 +115,7 @@ export default function GuardView() {
     try {
       await visitRequestByGuard(request);
       toast.success("Visit request raised successfully.");
-      setRequest({ name: "", purpose: "", department: "", clientId: "" });
+      setRequest({ name: "", purpose: "", department: "", clientId: "", vehicleImage: "" });
     } catch (err) {
       toast.error("Failed to raise visit request.");
     } finally {
@@ -121,9 +127,14 @@ export default function GuardView() {
     setOtpLoading(true);
     try {
       if (operation === "checkin") {
-        await validateVisitor({ visitorId: selectedVisitor, otp });
+        await validateVisitor({
+          visitorId: selectedVisitor,
+          otp,
+          vehicleImage: validationPlate || undefined,
+        });
         toast.success("Visitor validated");
         setOtp("");
+        setValidationPlate("");
       } else {
         await checkoutVisitor(selectedVisitor);
         toast.success("Visitor checked out");
@@ -145,7 +156,11 @@ export default function GuardView() {
       setScanProcessing(true);
       setShowScanner(false);
       try {
-        await checkInVisitorByQr(result.text);
+        await checkInVisitorByQr(
+          result.text,
+          validationPlate || undefined
+        );
+        setValidationPlate("");
         toast.success("Visitor validated");
         fetchLogs();
         fetchScheduled();
@@ -156,6 +171,24 @@ export default function GuardView() {
         setScanProcessing(false);
       }
     }
+  };
+
+  const handlePlateCapture = () => {
+    if (!webcamRef.current) return;
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
+    setRequest((prev) => ({ ...prev, vehicleImage: imageSrc }));
+    toast.success("Plate captured");
+    setShowPlateScanner(false);
+  };
+
+  const handleCheckPlateCapture = () => {
+    if (!webcamRef.current) return;
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
+    setValidationPlate(imageSrc);
+    toast.success("Plate captured");
+    setShowCheckPlateScanner(false);
   };
 
   return (
@@ -211,6 +244,29 @@ export default function GuardView() {
                     </SelectContent>
                   </Select>
                 </div>
+                <Dialog open={showPlateScanner} onOpenChange={setShowPlateScanner}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="w-full text-md"
+                    >
+                      Capture License Plate
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="text-center">
+                    <DialogHeader>
+                      <DialogTitle>Capture License Plate</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4 flex flex-col items-center space-y-4">
+                      <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                      <Button onClick={handlePlateCapture} className="mt-2">Capture</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <p className="text-sm text-muted-foreground text-center">
+                  {request.vehicleImage ? "Plate captured" : "Vehicle No.: N/A"}
+                </p>
                 <Button
                   onClick={handleRequestSubmit}
                   disabled={!request.name || !request.purpose || !request.department || requestLoading}
@@ -262,6 +318,33 @@ export default function GuardView() {
                     />
                   </div>
                 )}
+
+                {operation === "checkin" && (
+                  <div className="space-y-2 text-center">
+                    <Dialog
+                      open={showCheckPlateScanner}
+                      onOpenChange={setShowCheckPlateScanner}
+                    >
+                      <DialogTrigger asChild>
+                        <Button variant="secondary" className="w-full text-sm">
+                          Capture License Plate
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="text-center">
+                        <DialogHeader>
+                          <DialogTitle>Capture License Plate</DialogTitle>
+                        </DialogHeader>
+                        <div className="mt-4 flex flex-col items-center space-y-4">
+                          <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                          <Button onClick={handleCheckPlateCapture} className="mt-2">Capture</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <p className="text-sm text-muted-foreground">
+                      {validationPlate ? "Plate captured" : "Vehicle No.: N/A"}
+                    </p>
+                 </div>
+               )}
 
                 <Button
                   onClick={handleOperationAction}

@@ -66,6 +66,7 @@ export default function VisitorRecords() {
               <thead className="bg-muted">
                 <tr>
                   <th className="p-2 border-b font-medium">Name</th>
+                  <th className="p-2 border-b font-medium">Vehicle No.</th>
                   <th className="p-2 border-b font-medium">Department</th>
                   <th className="p-2 border-b font-medium">Date</th>
                   <th className="p-2 border-b font-medium">Scheduled CheckIn</th>
@@ -82,6 +83,23 @@ export default function VisitorRecords() {
                 {records.map((visitor) => (
                   <tr key={visitor.id}>
                     <td className="p-2">{visitor.name}</td>
+                    <td className="p-2">
+                      {visitor.vehicleImage ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">Img</Button>
+                          </DialogTrigger>
+                          <DialogContent className="text-center">
+                            <DialogHeader>
+                              <DialogTitle>Plate Image</DialogTitle>
+                            </DialogHeader>
+                            <img src={visitor.vehicleImage} alt="Plate" className="mx-auto" />
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
                     <td className="p-2">{fmt(visitor.department)}</td>
                     <td className="p-2">{visitor.date}</td>
                     <td className="p-2">{visitor.scheduledCheckIn}</td>

@@ -130,6 +130,24 @@ export default function IncomingRequests({ onNew }) {
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Vehicle No.:
+                    {item.vehicleImage ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="link" className="px-1 py-0 text-sm">Img</Button>
+                        </DialogTrigger>
+                        <DialogContent className="text-center">
+                          <DialogHeader>
+                            <DialogTitle>Plate Image</DialogTitle>
+                          </DialogHeader>
+                          <img src={item.vehicleImage} alt="Plate" className="mx-auto" />
+                        </DialogContent>
+                      </Dialog>
+                    ) : (
+                      " N/A"
+                    )}
+                  </p>
                   {item.requestedByGuard ? (
                     <p className="text-xs text-muted-foreground">Requested by guard</p>
                   ) : item.requestedByEndUser ? (
