@@ -50,7 +50,11 @@ export const getPendingVisitorRequests = async (clientId, endUserId) => {
       status: "PENDING",
       clientId,
     };
-    if (endUserId) where.endUserId = endUserId;
+    if (endUserId) {
+      where.endUserId = endUserId;
+      // exclude requests created by the end user
+      where.requestedByEndUser = false;
+    }
     const visitors = await db.visitor.findMany({
       where,
       orderBy: { createdAt: "desc" },
