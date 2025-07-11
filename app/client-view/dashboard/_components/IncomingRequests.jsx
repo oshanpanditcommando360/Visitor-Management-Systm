@@ -69,6 +69,7 @@ export default function IncomingRequests({ onNew }) {
         visitorId: selectedVisitor.id,
         durationHours,
         durationMinutes,
+        byClient: true,
       });
       toast.success("Visitor approved.");
       fetchRequests();

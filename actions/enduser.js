@@ -87,6 +87,7 @@ export const getEndUserRecords = async (endUserId) => {
         checkOutTime: true,
         approvedByClient: true,
         endUserId: true,
+        department: true,
         status: true,
         createdAt: true,
       },
@@ -101,7 +102,7 @@ export const getEndUserRecords = async (endUserId) => {
       checkInTime: v.checkInTime ? new Date(v.checkInTime).toLocaleTimeString() : "-",
       checkOutTime: v.checkOutTime ? new Date(v.checkOutTime).toLocaleTimeString() : "-",
       addedBy: "End User",
-      approvedBy: v.approvedByClient ? "Client" : "End User",
+      approvedBy: v.approvedByClient ? "Client" : v.department,
       status: v.status,
     }));
   } catch (err) {

@@ -60,6 +60,7 @@ export default function IncomingRequestsEndUser({ user }) {
         visitorId: selectedVisitor.id,
         durationHours,
         durationMinutes,
+        byClient: false,
       });
       toast.success("Visitor approved.");
       fetchRequests();

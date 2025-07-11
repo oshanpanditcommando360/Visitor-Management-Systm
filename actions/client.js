@@ -62,10 +62,17 @@ export const getPendingVisitorRequests = async (clientId, endUserId) => {
   }
 };
 
-export const approveVisitorRequest = async ({ visitorId, durationHours, durationMinutes }) => {
+export const approveVisitorRequest = async ({
+  visitorId,
+  durationHours,
+  durationMinutes,
+  byClient = true,
+}) => {
   try {
     const now = new Date();
-    const scheduledExit = new Date(now.getTime() + durationHours * 60 * 60 * 1000 + durationMinutes * 60 * 1000);
+    const scheduledExit = new Date(
+      now.getTime() + durationHours * 60 * 60 * 1000 + durationMinutes * 60 * 1000
+    );
 
     const visitor = await db.visitor.update({
       where: { id: visitorId },
@@ -74,7 +81,7 @@ export const approveVisitorRequest = async ({ visitorId, durationHours, duration
         scheduledEntry: now,
         scheduledExit: scheduledExit,
         checkInTime: now,
-        approvedByClient: true,
+        approvedByClient: byClient,
       },
     });
 
@@ -205,7 +212,11 @@ export const getAllVisitorRecords = async (clientId) => {
         : visitor.requestedByEndUser
         ? "End User"
         : "Client",
-      approvedBy: visitor.approvedByClient ? "Client" : visitor.endUserId ? "End User" : "-",
+      approvedBy: visitor.approvedByClient
+        ? "Client"
+        : visitor.department
+        ? visitor.department
+        : "-",
       status:
         visitor.status === "PENDING" && !visitor.scheduledEntry
           ? "Not Checked In"
