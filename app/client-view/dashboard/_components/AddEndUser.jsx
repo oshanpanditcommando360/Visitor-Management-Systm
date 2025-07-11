@@ -49,25 +49,25 @@ export default function AddEndUser() {
     <Card className="max-w-xl mx-auto">
       <CardContent className="p-6 space-y-4">
         <h2 className="text-xl font-semibold">Add End User</h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Name</Label>
+            <Label className="block text-sm font-medium mb-1">Name</Label>
             <Input name="name" value={form.name} onChange={handleChange} required />
           </div>
           <div>
-            <Label>Email</Label>
+            <Label className="block text-sm font-medium mb-1">Email</Label>
             <Input name="email" type="email" value={form.email} onChange={handleChange} required />
           </div>
           <div>
-            <Label>Post</Label>
+            <Label className="block text-sm font-medium mb-1">Post</Label>
             <Input name="post" value={form.post} onChange={handleChange} />
           </div>
           <div>
-            <Label>Password</Label>
+            <Label className="block text-sm font-medium mb-1">Password</Label>
             <Input name="password" type="password" value={form.password} onChange={handleChange} required />
           </div>
           <div>
-            <Label>Department</Label>
+            <Label className="block text-sm font-medium mb-1">Department</Label>
             <Select onValueChange={(v)=>setForm(p=>({...p,department:v}))}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select department" />
@@ -80,7 +80,7 @@ export default function AddEndUser() {
             </Select>
           </div>
           <div>
-            <Label>Approval Type</Label>
+            <Label className="block text-sm font-medium mb-1">Approval Type</Label>
             <Select onValueChange={(v)=>setForm(p=>({...p,approvalType:v}))} defaultValue="CLIENT_ONLY">
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select" />
