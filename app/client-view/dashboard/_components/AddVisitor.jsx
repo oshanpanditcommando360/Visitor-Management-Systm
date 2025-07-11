@@ -13,6 +13,8 @@ export default function AddVisitor() {
   const [formData, setFormData] = useState({
     visitorName: "",
     phoneNumber: "",
+    department: "",
+    endUserName: "",
     visitDate: null,
     entryTime: "",
     durationHours: "",
@@ -32,9 +34,9 @@ export default function AddVisitor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { visitorName, phoneNumber, visitDate, entryTime, durationHours, durationMinutes, purpose } = formData;
+    const { visitorName, phoneNumber, department, endUserName, visitDate, entryTime, durationHours, durationMinutes, purpose } = formData;
 
-    if (!visitorName || !phoneNumber || !visitDate || !entryTime || !durationHours || !purpose) {
+    if (!visitorName || !phoneNumber || !visitDate || !entryTime || !durationHours || !purpose || !department || !endUserName) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -51,6 +53,8 @@ export default function AddVisitor() {
         name: visitorName,
         phone: phoneNumber,
         purpose,
+        department,
+        endUserName,
         scheduledEntry,
         scheduledExit,
         clientId: client.clientId,
@@ -65,6 +69,8 @@ export default function AddVisitor() {
         durationHours: "",
         durationMinutes: "",
         purpose: "",
+        department: "",
+        endUserName: "",
       });
     } catch (err) {
       toast.error("Failed to add visitor.");
@@ -85,6 +91,14 @@ export default function AddVisitor() {
           <div>
             <Label className="block text-sm font-medium mb-1">Phone Number</Label>
             <Input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} required />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium mb-1">Department</Label>
+            <Input type="text" name="department" value={formData.department} onChange={handleChange} required />
+          </div>
+          <div>
+            <Label className="block text-sm font-medium mb-1">End User</Label>
+            <Input type="text" name="endUserName" value={formData.endUserName} onChange={handleChange} required />
           </div>
           <div className="space-y-1 flex flex-col items-center">
             <Label>Select Date</Label>

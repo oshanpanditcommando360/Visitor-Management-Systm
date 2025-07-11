@@ -5,6 +5,7 @@ import IncomingRequests from "./_components/IncomingRequests";
 import AddVisitor from "./_components/AddVisitor";
 import VisitorRecords from "./_components/VisitorRecords";
 import Alerts from "./_components/Alerts";
+import AddEndUser from "./_components/AddEndUser";
 
 export default function ClientDashboard() {
   const [activeSection, setActiveSection] = useState("requests");
@@ -29,6 +30,8 @@ export default function ClientDashboard() {
         return <IncomingRequests onNew={setNewRequests} />;
       case "add":
         return <AddVisitor />;
+      case "enduser":
+        return <AddEndUser />;
       case "records":
         return <VisitorRecords />;
       case "alerts":
@@ -63,6 +66,7 @@ export default function ClientDashboard() {
           Incoming Requests
         </Button>
         <Button variant={activeSection === "add" ? "default" : "outline"} onClick={() => setActiveSection("add")}>Add a Visitor</Button>
+        <Button variant={activeSection === "enduser" ? "default" : "outline"} onClick={() => setActiveSection("enduser")}>Add End User</Button>
         <Button variant={activeSection === "records" ? "default" : "outline"} onClick={() => setActiveSection("records")}>Visitor Records</Button>
         <Button
           variant={activeSection === "alerts" ? "default" : "outline"}
