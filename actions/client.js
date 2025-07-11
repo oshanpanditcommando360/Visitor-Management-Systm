@@ -207,11 +207,6 @@ export const getAllVisitorRecords = async (clientId) => {
       checkOutTime: visitor.checkOutTime
         ? new Date(visitor.checkOutTime).toLocaleTimeString()
         : "-",
-      addedBy: visitor.requestedByGuard
-        ? "Guard"
-        : visitor.requestedByEndUser
-        ? "End User"
-        : "Client",
       approvedBy: visitor.approvedByClient
         ? "Client"
         : visitor.department

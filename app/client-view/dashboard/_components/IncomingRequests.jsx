@@ -15,6 +15,9 @@ import {
 import { getPendingVisitorRequests,approveVisitorRequest,denyVisitorRequest } from "@/actions/client";
 import { toast } from "sonner";
 
+const fmt = (v) =>
+  v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+
 export default function IncomingRequests({ onNew }) {
   const [requests, setRequests] = useState([]);
   const [durations, setDurations] = useState({});
@@ -114,6 +117,11 @@ export default function IncomingRequests({ onNew }) {
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
+                  {item.requestedByGuard ? (
+                    <p className="text-xs text-muted-foreground">Requested by guard</p>
+                  ) : item.requestedByEndUser ? (
+                    <p className="text-xs text-muted-foreground">Added by {fmt(item.department)}</p>
+                  ) : null}
                 </div>
                 <div className="flex space-x-2 mt-2 md:mt-0">
                   <Dialog>
