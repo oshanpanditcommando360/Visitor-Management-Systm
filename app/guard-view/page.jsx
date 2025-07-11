@@ -32,9 +32,10 @@ const BarcodeScanner = dynamic(
 );
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
+const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
 
 export default function GuardView() {
-  const [request, setRequest] = useState({ name: "", purpose: "", clientId: "" });
+  const [request, setRequest] = useState({ name: "", purpose: "", department: "", endUserName: "", clientId: "" });
   const [selectedVisitor, setSelectedVisitor] = useState("");
   const [otp, setOtp] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
@@ -107,7 +108,7 @@ export default function GuardView() {
     try {
       await visitRequestByGuard(request);
       toast.success("Visit request raised successfully.");
-      setRequest({ name: "", purpose: "", clientId: "" });
+      setRequest({ name: "", purpose: "", department: "", endUserName: "", clientId: "" });
     } catch (err) {
       toast.error("Failed to raise visit request.");
     } finally {
@@ -194,9 +195,32 @@ export default function GuardView() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1">
+                  <Label>Department</Label>
+                  <Select onValueChange={(value) => setRequest({ ...request, department: value })}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>End User Name</Label>
+                  <Input
+                    placeholder="Enter end user name"
+                    value={request.endUserName}
+                    onChange={(e) => setRequest({ ...request, endUserName: e.target.value })}
+                  />
+                </div>
                 <Button
                   onClick={handleRequestSubmit}
-                  disabled={!request.name || !request.purpose || requestLoading}
+                  disabled={!request.name || !request.purpose || !request.department || !request.endUserName || requestLoading}
                   className="w-full text-md"
                 >
                   {requestLoading ? "Submitting..." : "Submit Request"}

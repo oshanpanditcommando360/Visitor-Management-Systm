@@ -19,6 +19,7 @@ export default function AddEndUser() {
     password: "",
     department: "",
     approvalType: "CLIENT_ONLY",
+    canAddVisitor: false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +33,7 @@ export default function AddEndUser() {
     try {
       await createEndUser({ ...form, clientId: client.clientId });
       toast.success("End user created");
-      setForm({ name: "", email: "", post: "", password: "", department: "", approvalType: "CLIENT_ONLY" });
+      setForm({ name: "", email: "", post: "", password: "", department: "", approvalType: "CLIENT_ONLY", canAddVisitor: false });
     } catch {
       toast.error("Failed to create");
     } finally {
@@ -91,6 +92,15 @@ export default function AddEndUser() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              id="can-add"
+              type="checkbox"
+              checked={form.canAddVisitor}
+              onChange={(e) => setForm((p) => ({ ...p, canAddVisitor: e.target.checked }))}
+            />
+            <Label htmlFor="can-add">Allow End User to add visitor</Label>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading?"Submitting...":"Add End User"}

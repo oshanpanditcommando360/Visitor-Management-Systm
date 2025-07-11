@@ -44,19 +44,17 @@ export const signInClient = async ({ email, password }) => {
     }
 }
 
-export const getPendingVisitorRequests = async (clientId) => {
+export const getPendingVisitorRequests = async (clientId, endUserId) => {
   try {
+    const where = {
+      status: "PENDING",
+      clientId,
+    };
+    if (endUserId) where.endUserId = endUserId;
     const visitors = await db.visitor.findMany({
-      where: {
-        status: "PENDING",
-        requestedByGuard: true,
-        clientId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where,
+      orderBy: { createdAt: "desc" },
     });
-
     return visitors;
   } catch (error) {
     console.error("Error fetching pending visitors:", error);
@@ -134,6 +132,7 @@ export const addVisitorByClient = async ({
         phone,
         department,
         endUserId: null,
+        requestedByEndUser: false,
         requestedByGuard: false,
         status: "SCHEDULED",
       },
@@ -167,6 +166,9 @@ export const getAllVisitorRecords = async (clientId) => {
         checkInTime: true,
         checkOutTime: true,
         requestedByGuard: true,
+        requestedByEndUser: true,
+        department: true,
+        endUserName: true,
         status: true,
         createdAt: true,
       },
@@ -176,6 +178,8 @@ export const getAllVisitorRecords = async (clientId) => {
       id: visitor.id,
       name: visitor.name,
       purpose: visitor.purpose,
+      department: visitor.department ?? "-",
+      endUserName: visitor.endUserName ?? "-",
       date: visitor.requestedByGuard
         ? new Date(visitor.createdAt).toLocaleDateString()
         : visitor.scheduledEntry?.toLocaleDateString() ?? "-",
@@ -194,7 +198,11 @@ export const getAllVisitorRecords = async (clientId) => {
       checkOutTime: visitor.checkOutTime
         ? new Date(visitor.checkOutTime).toLocaleTimeString()
         : "-",
-      addedBy: visitor.requestedByGuard ? "Guard" : "Client",
+      addedBy: visitor.requestedByGuard
+        ? "Guard"
+        : visitor.requestedByEndUser
+        ? "End User"
+        : "Client",
       status:
         visitor.status === "PENDING" && !visitor.scheduledEntry
           ? "Not Checked In"

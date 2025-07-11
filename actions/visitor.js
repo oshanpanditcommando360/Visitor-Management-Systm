@@ -6,9 +6,11 @@ export const visitRequestByGuard = async (visitData) => {
   try {
     const visitor = await db.visitor.create({
       data: {
-        name:visitData.name,
-        purpose:visitData.purpose,
-        clientId:visitData.clientId,
+        name: visitData.name,
+        purpose: visitData.purpose,
+        clientId: visitData.clientId,
+        department: visitData.department,
+        endUserName: visitData.endUserName,
         requestedByGuard: true,
         status: "PENDING",
       },

@@ -31,6 +31,7 @@ export default function EndUserSignIn(){
         department: res.department,
         post: res.post,
         approvalType: res.approvalType,
+        canAddVisitor: res.canAddVisitor,
         clientId: res.clientId,
       }));
       router.push("/end-user-view/dashboard");
