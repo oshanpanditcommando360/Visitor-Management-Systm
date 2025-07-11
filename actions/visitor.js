@@ -15,7 +15,7 @@ export const visitRequestByGuard = async (visitData) => {
         department: visitData.department,
         endUserName: endUser?.name ?? null,
         endUserId: endUser?.id ?? null,
-        approvalType: endUser?.approvalType ?? null,
+        approvalType: endUser?.approvalType ?? "CLIENT_ONLY",
         requestedByGuard: true,
         status: "PENDING",
       },

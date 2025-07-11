@@ -46,14 +46,32 @@ export const signInClient = async ({ email, password }) => {
 
 export const getPendingVisitorRequests = async (clientId, endUserId) => {
   try {
-    const where = {
-      status: "PENDING",
-      clientId,
-    };
+    const base = { status: "PENDING", clientId };
+    let where;
     if (endUserId) {
-      where.endUserId = endUserId;
-      // exclude requests created by the end user
-      where.requestedByEndUser = false;
+      // for end user dashboard
+      where = {
+        ...base,
+        endUserId,
+        requestedByEndUser: false,
+        approvalType: { in: ["END_USER_ONLY", "BOTH"] },
+      };
+    } else {
+      // for client dashboard
+      where = {
+        ...base,
+        OR: [
+          { requestedByEndUser: true },
+          {
+            requestedByGuard: true,
+            OR: [
+              { approvalType: null },
+              { approvalType: "CLIENT_ONLY" },
+              { approvalType: "BOTH" },
+            ],
+          },
+        ],
+      };
     }
     const visitors = await db.visitor.findMany({
       where,
@@ -74,20 +92,37 @@ export const approveVisitorRequest = async ({
 }) => {
   try {
     const now = new Date();
+    const existing = await db.visitor.findUnique({
+      where: { id: visitorId },
+      select: { requestedByGuard: true, requestedByEndUser: true, scheduledExit: true },
+    });
+
+    if (!existing) throw new Error("Visitor not found");
+
+    if (existing.requestedByEndUser) {
+      await db.visitor.update({
+        where: { id: visitorId },
+        data: { status: "SCHEDULED", approvedByClient: byClient },
+      });
+      await createAlert({
+        visitorId,
+        type: "SCHEDULED",
+        message: `Visit scheduled`,
+      });
+      return { success: true };
+    }
+
     let scheduledExit;
     if (durationHours !== undefined || durationMinutes !== undefined) {
       scheduledExit = new Date(
-        now.getTime() + (durationHours || 0) * 60 * 60 * 1000 + (durationMinutes || 0) * 60 * 1000
+        now.getTime() + (durationHours || 0) * 60 * 60 * 1000 +
+          (durationMinutes || 0) * 60 * 1000
       );
     } else {
-      const existing = await db.visitor.findUnique({
-        where: { id: visitorId },
-        select: { scheduledExit: true },
-      });
-      scheduledExit = existing?.scheduledExit ?? now;
+      scheduledExit = existing.scheduledExit ?? now;
     }
 
-    const visitor = await db.visitor.update({
+    await db.visitor.update({
       where: { id: visitorId },
       data: {
         status: "CHECKED_IN",
@@ -99,9 +134,9 @@ export const approveVisitorRequest = async ({
     });
 
     await createAlert({
-      visitorId: visitor.id,
+      visitorId,
       type: "CHECKED_IN",
-      message: `${visitor.name} checked in`,
+      message: `Visitor checked in`,
     });
 
     return { success: true };
@@ -136,12 +171,14 @@ export const addVisitorByClient = async ({
   phone,
   purpose,
   department,
-  endUser,
   scheduledEntry,
   scheduledExit,
   clientId,
 }) => {
   try {
+    const endUser = await db.endUser.findFirst({
+      where: { clientId, department },
+    });
     const visitor = await db.visitor.create({
       data: {
         name,
@@ -151,9 +188,11 @@ export const addVisitorByClient = async ({
         clientId,
         phone,
         department,
-        endUserId: null,
+        endUserId: endUser?.id ?? null,
+        endUserName: endUser?.name ?? null,
         requestedByEndUser: false,
         requestedByGuard: false,
+        approvedByClient: true,
         status: "SCHEDULED",
       },
     });

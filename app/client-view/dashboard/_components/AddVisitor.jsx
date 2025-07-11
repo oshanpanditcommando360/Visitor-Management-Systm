@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { addVisitorByClient } from "@/actions/client";
 import { toast } from "sonner";
+
+const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function AddVisitor() {
   const [formData, setFormData] = useState({
     visitorName: "",
     phoneNumber: "",
     department: "",
-    endUserName: "",
     visitDate: null,
     entryTime: "",
     durationHours: "",
@@ -34,9 +37,9 @@ export default function AddVisitor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { visitorName, phoneNumber, department, endUserName, visitDate, entryTime, durationHours, durationMinutes, purpose } = formData;
+    const { visitorName, phoneNumber, department, visitDate, entryTime, durationHours, durationMinutes, purpose } = formData;
 
-    if (!visitorName || !phoneNumber || !visitDate || !entryTime || !durationHours || !purpose || !department || !endUserName) {
+    if (!visitorName || !phoneNumber || !visitDate || !entryTime || !durationHours || !purpose || !department) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -54,7 +57,6 @@ export default function AddVisitor() {
         phone: phoneNumber,
         purpose,
         department,
-        endUserName,
         scheduledEntry,
         scheduledExit,
         clientId: client.clientId,
@@ -70,7 +72,6 @@ export default function AddVisitor() {
         durationMinutes: "",
         purpose: "",
         department: "",
-        endUserName: "",
       });
     } catch (err) {
       toast.error("Failed to add visitor.");
@@ -94,11 +95,18 @@ export default function AddVisitor() {
           </div>
           <div>
             <Label className="block text-sm font-medium mb-1">Department</Label>
-            <Input type="text" name="department" value={formData.department} onChange={handleChange} required />
-          </div>
-          <div>
-            <Label className="block text-sm font-medium mb-1">End User</Label>
-            <Input type="text" name="endUserName" value={formData.endUserName} onChange={handleChange} required />
+            <Select onValueChange={(v) => setFormData((p) => ({ ...p, department: v }))}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {fmt(d)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1 flex flex-col items-center">
             <Label>Select Date</Label>

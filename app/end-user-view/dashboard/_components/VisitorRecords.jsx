@@ -67,6 +67,7 @@ export default function VisitorRecordsEndUser({ user }) {
                   <th className="p-2 border-b font-medium">Actual CheckIn Date</th>
                   <th className="p-2 border-b font-medium">Actual CheckIn</th>
                   <th className="p-2 border-b font-medium">Actual CheckOut</th>
+                  <th className="p-2 border-b font-medium">Approved By</th>
                   <th className="p-2 border-b font-medium">Status</th>
                   <th className="p-2 border-b font-medium">QR</th>
                 </tr>
@@ -81,6 +82,7 @@ export default function VisitorRecordsEndUser({ user }) {
                     <td className="p-2">{visitor.checkInDate}</td>
                     <td className="p-2">{visitor.checkInTime}</td>
                     <td className="p-2">{visitor.checkOutTime}</td>
+                    <td className="p-2">{visitor.approvedBy ? fmt(visitor.approvedBy) : "-"}</td>
                     <td className="p-2">
                       <Badge variant={getBadgeVariant(visitor.status)} className="text-xs">
                         {fmt(visitor.status)}
