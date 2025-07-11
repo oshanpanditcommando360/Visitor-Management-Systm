@@ -14,7 +14,7 @@ export const createClient = async (clientData) => {
                 email: clientData.email,
                 phone: clientData.phone,
                 password: hashedPassword,
-                department: clientData.department,
+                department: "ADMIN",
             },
         });
 
@@ -44,19 +44,39 @@ export const signInClient = async ({ email, password }) => {
     }
 }
 
-export const getPendingVisitorRequests = async (clientId) => {
+export const getPendingVisitorRequests = async (clientId, endUserId) => {
   try {
+    const base = { status: "PENDING", clientId };
+    let where;
+    if (endUserId) {
+      // for end user dashboard
+      where = {
+        ...base,
+        endUserId,
+        requestedByEndUser: false,
+        approvalType: { in: ["END_USER_ONLY", "BOTH"] },
+      };
+    } else {
+      // for client dashboard
+      where = {
+        ...base,
+        OR: [
+          { requestedByEndUser: true },
+          {
+            requestedByGuard: true,
+            OR: [
+              { approvalType: null },
+              { approvalType: "CLIENT_ONLY" },
+              { approvalType: "BOTH" },
+            ],
+          },
+        ],
+      };
+    }
     const visitors = await db.visitor.findMany({
-      where: {
-        status: "PENDING",
-        requestedByGuard: true,
-        clientId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where,
+      orderBy: { createdAt: "desc" },
     });
-
     return visitors;
   } catch (error) {
     console.error("Error fetching pending visitors:", error);
@@ -64,26 +84,58 @@ export const getPendingVisitorRequests = async (clientId) => {
   }
 };
 
-export const approveVisitorRequest = async ({ visitorId, durationHours, durationMinutes }) => {
+export const approveVisitorRequest = async ({
+  visitorId,
+  durationHours,
+  durationMinutes,
+  byClient = true,
+}) => {
   try {
     const now = new Date();
-    const scheduledExit = new Date(now.getTime() + durationHours * 60 * 60 * 1000 + durationMinutes * 60 * 1000);
+    const existing = await db.visitor.findUnique({
+      where: { id: visitorId },
+      select: { requestedByGuard: true, requestedByEndUser: true, scheduledExit: true },
+    });
 
-    const visitor = await db.visitor.update({
+    if (!existing) throw new Error("Visitor not found");
+
+    if (existing.requestedByEndUser) {
+      await db.visitor.update({
+        where: { id: visitorId },
+        data: { status: "SCHEDULED", approvedByClient: byClient },
+      });
+      await createAlert({
+        visitorId,
+        type: "SCHEDULED",
+        message: `Visit scheduled`,
+      });
+      return { success: true };
+    }
+
+    let scheduledExit;
+    if (durationHours !== undefined || durationMinutes !== undefined) {
+      scheduledExit = new Date(
+        now.getTime() + (durationHours || 0) * 60 * 60 * 1000 +
+          (durationMinutes || 0) * 60 * 1000
+      );
+    } else {
+      scheduledExit = existing.scheduledExit ?? now;
+    }
+
+    await db.visitor.update({
       where: { id: visitorId },
       data: {
-        status: "CHECKED_IN",
+        status: "APPROVED",
         scheduledEntry: now,
-        scheduledExit: scheduledExit,
-        checkInTime: now,
-        approvedByClient: true,
+        scheduledExit,
+        approvedByClient: byClient,
       },
     });
 
     await createAlert({
-      visitorId: visitor.id,
-      type: "CHECKED_IN",
-      message: `${visitor.name} checked in`,
+      visitorId,
+      type: "SCHEDULED",
+      message: `Visit approved`,
     });
 
     return { success: true };
@@ -117,11 +169,15 @@ export const addVisitorByClient = async ({
   name,
   phone,
   purpose,
+  department,
   scheduledEntry,
   scheduledExit,
   clientId,
 }) => {
   try {
+    const endUser = await db.endUser.findFirst({
+      where: { clientId, department },
+    });
     const visitor = await db.visitor.create({
       data: {
         name,
@@ -130,7 +186,12 @@ export const addVisitorByClient = async ({
         scheduledExit: new Date(scheduledExit),
         clientId,
         phone,
+        department,
+        endUserId: endUser?.id ?? null,
+        endUserName: endUser?.name ?? null,
+        requestedByEndUser: false,
         requestedByGuard: false,
+        approvedByClient: true,
         status: "SCHEDULED",
       },
     });
@@ -163,6 +224,11 @@ export const getAllVisitorRecords = async (clientId) => {
         checkInTime: true,
         checkOutTime: true,
         requestedByGuard: true,
+        requestedByEndUser: true,
+        department: true,
+        endUserName: true,
+        endUserId: true,
+        approvedByClient: true,
         status: true,
         createdAt: true,
       },
@@ -172,6 +238,8 @@ export const getAllVisitorRecords = async (clientId) => {
       id: visitor.id,
       name: visitor.name,
       purpose: visitor.purpose,
+      department: visitor.department ?? "-",
+      endUserName: visitor.endUserName ?? "-",
       date: visitor.requestedByGuard
         ? new Date(visitor.createdAt).toLocaleDateString()
         : visitor.scheduledEntry?.toLocaleDateString() ?? "-",
@@ -190,11 +258,13 @@ export const getAllVisitorRecords = async (clientId) => {
       checkOutTime: visitor.checkOutTime
         ? new Date(visitor.checkOutTime).toLocaleTimeString()
         : "-",
-      addedBy: visitor.requestedByGuard ? "Guard" : "Client",
-      status:
-        visitor.status === "PENDING" && !visitor.scheduledEntry
-          ? "Not Checked In"
-          : visitor.status,
+      approvedBy:
+        visitor.approvedByClient === null
+          ? "-"
+          : visitor.approvedByClient
+          ? "Client"
+          : visitor.department,
+      status: visitor.status,
     }));
   } catch (err) {
     throw new Error("Failed to retrieve visitor records.");

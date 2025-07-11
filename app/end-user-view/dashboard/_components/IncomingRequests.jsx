@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -12,31 +12,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getPendingVisitorRequests,approveVisitorRequest,denyVisitorRequest } from "@/actions/client";
+import { getPendingVisitorRequests, approveVisitorRequest, denyVisitorRequest } from "@/actions/client";
 import { toast } from "sonner";
 
-const fmt = (v) =>
-  v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
-
-export default function IncomingRequests({ onNew }) {
+export default function IncomingRequestsEndUser({ user }) {
   const [requests, setRequests] = useState([]);
   const [durations, setDurations] = useState({});
   const [selectedVisitor, setSelectedVisitor] = useState(null);
   const [popupIndex, setPopupIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const prevCount = useRef(0);
 
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const client = JSON.parse(localStorage.getItem("clientInfo"));
-      const data = await getPendingVisitorRequests(client?.clientId);
+      const data = await getPendingVisitorRequests(user.clientId, user.id);
       setRequests(data);
-      if (onNew && data.length > prevCount.current) {
-        onNew(true);
-      }
-      prevCount.current = data.length;
     } catch (err) {
       toast.error("Failed to fetch visitor requests.");
     } finally {
@@ -51,29 +42,13 @@ export default function IncomingRequests({ onNew }) {
   }, []);
 
   const handleChange = (field, value) => {
-    setDurations((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setDurations((prev) => ({ ...prev, [field]: value }));
   };
 
   const openPopup = (item, index) => {
     setSelectedVisitor(item);
     setPopupIndex(index);
     setDurations({ hours: "", minutes: "" });
-  };
-
-  const approveWithoutDuration = async (visitorId) => {
-    setActionLoading(true);
-    try {
-      await approveVisitorRequest({ visitorId, byClient: true });
-      toast.success("Visitor approved.");
-      fetchRequests();
-    } catch (err) {
-      toast.error("Failed to approve visitor.");
-    } finally {
-      setActionLoading(false);
-    }
   };
 
   const handleApprove = async () => {
@@ -85,7 +60,7 @@ export default function IncomingRequests({ onNew }) {
         visitorId: selectedVisitor.id,
         durationHours,
         durationMinutes,
-        byClient: true,
+        byClient: false,
       });
       toast.success("Visitor approved.");
       fetchRequests();
@@ -130,64 +105,48 @@ export default function IncomingRequests({ onNew }) {
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
-                  {item.requestedByGuard ? (
-                    <p className="text-xs text-muted-foreground">Requested by guard</p>
-                  ) : item.requestedByEndUser ? (
-                    <p className="text-xs text-muted-foreground">Added by {fmt(item.department)}</p>
-                  ) : null}
                 </div>
                 <div className="flex space-x-2 mt-2 md:mt-0">
-                  {item.requestedByEndUser ? (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => approveWithoutDuration(item.id)}
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? "Processing..." : "Approve"}
-                    </Button>
-                  ) : (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => openPopup(item, idx)}
-                        >
-                          Approve
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => openPopup(item, idx)}
+                      >
+                        Approve
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Select Visit Duration</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex gap-3 mt-4">
+                        <Input
+                          type="number"
+                          placeholder="Hours"
+                          min={0}
+                          className="w-1/2"
+                          value={durations.hours || ""}
+                          onChange={(e) => handleChange("hours", e.target.value)}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Minutes"
+                          min={0}
+                          max={59}
+                          className="w-1/2"
+                          value={durations.minutes || ""}
+                          onChange={(e) => handleChange("minutes", e.target.value)}
+                        />
+                      </div>
+                      <DialogFooter className="mt-4">
+                        <Button onClick={handleApprove} disabled={actionLoading}>
+                          {actionLoading ? "Processing..." : "Add Visitor"}
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Select Visit Duration</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex gap-3 mt-4">
-                          <Input
-                            type="number"
-                            placeholder="Hours"
-                            min={0}
-                            className="w-1/2"
-                            value={durations.hours || ""}
-                            onChange={(e) => handleChange("hours", e.target.value)}
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Minutes"
-                            min={0}
-                            max={59}
-                            className="w-1/2"
-                            value={durations.minutes || ""}
-                            onChange={(e) => handleChange("minutes", e.target.value)}
-                          />
-                        </div>
-                        <DialogFooter className="mt-4">
-                          <Button onClick={handleApprove} disabled={actionLoading}>
-                            {actionLoading ? "Processing..." : "Add Visitor"}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     size="sm"
                     variant="destructive"

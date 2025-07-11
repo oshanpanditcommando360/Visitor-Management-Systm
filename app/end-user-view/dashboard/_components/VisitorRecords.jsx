@@ -1,31 +1,26 @@
+"use client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Eye } from "lucide-react";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import QRCode from "react-qr-code";
-import { getAllVisitorRecords } from "@/actions/client";
+import { getEndUserRecords } from "@/actions/enduser";
 import { toast } from "sonner";
 
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
-export default function VisitorRecords() {
+export default function VisitorRecordsEndUser({ user }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const client = JSON.parse(localStorage.getItem("clientInfo"));
-      const data = await getAllVisitorRecords(client?.clientId);
+      const data = await getEndUserRecords(user.id);
       setRecords(data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load visitor records.");
     } finally {
       setLoading(false);
@@ -66,7 +61,6 @@ export default function VisitorRecords() {
               <thead className="bg-muted">
                 <tr>
                   <th className="p-2 border-b font-medium">Name</th>
-                  <th className="p-2 border-b font-medium">Department</th>
                   <th className="p-2 border-b font-medium">Date</th>
                   <th className="p-2 border-b font-medium">Scheduled CheckIn</th>
                   <th className="p-2 border-b font-medium">Scheduled Checkout</th>
@@ -82,7 +76,6 @@ export default function VisitorRecords() {
                 {records.map((visitor) => (
                   <tr key={visitor.id}>
                     <td className="p-2">{visitor.name}</td>
-                    <td className="p-2">{fmt(visitor.department)}</td>
                     <td className="p-2">{visitor.date}</td>
                     <td className="p-2">{visitor.scheduledCheckIn}</td>
                     <td className="p-2">{visitor.scheduledCheckOut}</td>

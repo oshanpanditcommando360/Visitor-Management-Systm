@@ -23,6 +23,7 @@ model Client {
   password  String
   department Department
   visitors  Visitor[] @relation("ClientVisitors")
+  endUsers  EndUser[]
   createdAt DateTime  @default(now())
 }
 
@@ -35,11 +36,17 @@ model Visitor {
   scheduledExit           DateTime?
   checkInTime             DateTime?
   checkOutTime            DateTime?
-  requestedByGuard        Boolean      @default(false) 
+  requestedByGuard        Boolean      @default(false)
+  requestedByEndUser     Boolean      @default(false)
   approvedByClient        Boolean?
   status                  VisitorStatus @default(PENDING)
   clientId                String
   client                  Client    @relation("ClientVisitors", fields: [clientId], references: [id])
+  department              Department?
+  endUserName             String?
+  endUserId               String?
+  endUser                 EndUser?  @relation(fields: [endUserId], references: [id])
+  approvalType            ApprovalType?
   otp                     Otp?
   alerts                  Alert[]
   createdAt               DateTime @default(now())
@@ -90,4 +97,25 @@ enum Department {
   HR
   IT
   OPERATIONS
+}
+
+enum ApprovalType {
+  CLIENT_ONLY
+  END_USER_ONLY
+  BOTH
+}
+
+model EndUser {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  password     String
+  department   Department
+  post         String
+  approvalType ApprovalType
+  canAddVisitor Boolean @default(false)
+  clientId     String
+  client       Client       @relation(fields: [clientId], references: [id])
+  visitors     Visitor[]
+  createdAt    DateTime     @default(now())
 }

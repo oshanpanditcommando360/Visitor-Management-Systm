@@ -4,11 +4,18 @@ import { createAlert } from "./alert";
 
 export const visitRequestByGuard = async (visitData) => {
   try {
+    const endUser = await db.endUser.findFirst({
+      where: { clientId: visitData.clientId, department: visitData.department },
+    });
     const visitor = await db.visitor.create({
       data: {
-        name:visitData.name,
-        purpose:visitData.purpose,
-        clientId:visitData.clientId,
+        name: visitData.name,
+        purpose: visitData.purpose,
+        clientId: visitData.clientId,
+        department: visitData.department,
+        endUserName: endUser?.name ?? null,
+        endUserId: endUser?.id ?? null,
+        approvalType: endUser?.approvalType ?? "CLIENT_ONLY",
         requestedByGuard: true,
         status: "PENDING",
       },
@@ -47,7 +54,12 @@ export const getVisitorLogsForGuard = async () => {
 export const getScheduledVisitors = async () => {
   try {
     return await db.visitor.findMany({
-      where: { requestedByGuard: false, status: "SCHEDULED" },
+      where: {
+        OR: [
+          { requestedByGuard: false, status: "SCHEDULED" },
+          { requestedByGuard: true, status: "APPROVED" },
+        ],
+      },
       orderBy: { scheduledEntry: "asc" },
       select: { id: true, name: true },
     });
