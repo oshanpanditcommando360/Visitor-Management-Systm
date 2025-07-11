@@ -63,6 +63,19 @@ export default function IncomingRequests({ onNew }) {
     setDurations({ hours: "", minutes: "" });
   };
 
+  const approveWithoutDuration = async (visitorId) => {
+    setActionLoading(true);
+    try {
+      await approveVisitorRequest({ visitorId, byClient: true });
+      toast.success("Visitor approved.");
+      fetchRequests();
+    } catch (err) {
+      toast.error("Failed to approve visitor.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleApprove = async () => {
     setActionLoading(true);
     try {
@@ -124,46 +137,57 @@ export default function IncomingRequests({ onNew }) {
                   ) : null}
                 </div>
                 <div className="flex space-x-2 mt-2 md:mt-0">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={() => openPopup(item, idx)}
-                      >
-                        Approve
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Select Visit Duration</DialogTitle>
-                      </DialogHeader>
-                      <div className="flex gap-3 mt-4">
-                        <Input
-                          type="number"
-                          placeholder="Hours"
-                          min={0}
-                          className="w-1/2"
-                          value={durations.hours || ""}
-                          onChange={(e) => handleChange("hours", e.target.value)}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Minutes"
-                          min={0}
-                          max={59}
-                          className="w-1/2"
-                          value={durations.minutes || ""}
-                          onChange={(e) => handleChange("minutes", e.target.value)}
-                        />
-                      </div>
-                      <DialogFooter className="mt-4">
-                        <Button onClick={handleApprove} disabled={actionLoading}>
-                          {actionLoading ? "Processing..." : "Add Visitor"}
+                  {item.requestedByEndUser ? (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => approveWithoutDuration(item.id)}
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? "Processing..." : "Approve"}
+                    </Button>
+                  ) : (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => openPopup(item, idx)}
+                        >
+                          Approve
                         </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Select Visit Duration</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex gap-3 mt-4">
+                          <Input
+                            type="number"
+                            placeholder="Hours"
+                            min={0}
+                            className="w-1/2"
+                            value={durations.hours || ""}
+                            onChange={(e) => handleChange("hours", e.target.value)}
+                          />
+                          <Input
+                            type="number"
+                            placeholder="Minutes"
+                            min={0}
+                            max={59}
+                            className="w-1/2"
+                            value={durations.minutes || ""}
+                            onChange={(e) => handleChange("minutes", e.target.value)}
+                          />
+                        </div>
+                        <DialogFooter className="mt-4">
+                          <Button onClick={handleApprove} disabled={actionLoading}>
+                            {actionLoading ? "Processing..." : "Add Visitor"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                   <Button
                     size="sm"
                     variant="destructive"

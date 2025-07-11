@@ -85,7 +85,6 @@ export const getEndUserRecords = async (endUserId) => {
         scheduledExit: true,
         checkInTime: true,
         checkOutTime: true,
-        approvedByClient: true,
         endUserId: true,
         department: true,
         status: true,
@@ -101,7 +100,6 @@ export const getEndUserRecords = async (endUserId) => {
       checkInDate: v.checkInTime ? new Date(v.checkInTime).toLocaleDateString() : "-",
       checkInTime: v.checkInTime ? new Date(v.checkInTime).toLocaleTimeString() : "-",
       checkOutTime: v.checkOutTime ? new Date(v.checkOutTime).toLocaleTimeString() : "-",
-      approvedBy: v.approvedByClient ? "Client" : v.department,
       status: v.status,
     }));
   } catch (err) {

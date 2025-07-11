@@ -74,16 +74,25 @@ export const approveVisitorRequest = async ({
 }) => {
   try {
     const now = new Date();
-    const scheduledExit = new Date(
-      now.getTime() + durationHours * 60 * 60 * 1000 + durationMinutes * 60 * 1000
-    );
+    let scheduledExit;
+    if (durationHours !== undefined || durationMinutes !== undefined) {
+      scheduledExit = new Date(
+        now.getTime() + (durationHours || 0) * 60 * 60 * 1000 + (durationMinutes || 0) * 60 * 1000
+      );
+    } else {
+      const existing = await db.visitor.findUnique({
+        where: { id: visitorId },
+        select: { scheduledExit: true },
+      });
+      scheduledExit = existing?.scheduledExit ?? now;
+    }
 
     const visitor = await db.visitor.update({
       where: { id: visitorId },
       data: {
         status: "CHECKED_IN",
         scheduledEntry: now,
-        scheduledExit: scheduledExit,
+        scheduledExit,
         checkInTime: now,
         approvedByClient: byClient,
       },
