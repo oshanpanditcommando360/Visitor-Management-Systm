@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import dynamic from "next/dynamic";
 import Webcam from "react-webcam";
-import { ocrSpace } from "ocr-space-api-wrapper";
+import { parsePlate } from "@/lib/ocr";
 import {
   Dialog,
   DialogContent,
@@ -181,8 +181,7 @@ export default function GuardView() {
     if (!imageSrc) return;
     setPlateLoading(true);
     try {
-      const res = await ocrSpace(imageSrc, { apiKey: "helloworld", language: "eng" });
-      const text = res?.ParsedResults?.[0]?.ParsedText || "";
+      const text = await parsePlate(imageSrc);
       const plate = text.replace(/\s/g, "").trim();
       setRequest((prev) => ({ ...prev, vehicleNumber: plate || "N/A" }));
       toast.success("Number plate captured");
@@ -200,8 +199,7 @@ export default function GuardView() {
     if (!imageSrc) return;
     setCheckPlateLoading(true);
     try {
-      const res = await ocrSpace(imageSrc, { apiKey: "helloworld", language: "eng" });
-      const text = res?.ParsedResults?.[0]?.ParsedText || "";
+      const text = await parsePlate(imageSrc);
       const plate = text.replace(/\s/g, "").trim();
       setValidationPlate(plate || "N/A");
       toast.success("Number plate captured");
