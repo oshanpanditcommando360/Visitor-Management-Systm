@@ -108,6 +108,41 @@ export default function GuardView() {
     return () => clearInterval(interval);
   }, []);
 
+  // Automatically scan license plate when the scanner dialogs are open
+  useEffect(() => {
+    if (!showPlateScanner) return;
+    setPlateLoading(true);
+    const interval = setInterval(async () => {
+      const plate = await capturePlate();
+      if (plate) {
+        setRequest((prev) => ({ ...prev, vehicleNumber: plate }));
+        toast.success("Number plate captured");
+        setShowPlateScanner(false);
+      }
+    }, 1500);
+    return () => {
+      clearInterval(interval);
+      setPlateLoading(false);
+    };
+  }, [showPlateScanner]);
+
+  useEffect(() => {
+    if (!showCheckPlateScanner) return;
+    setCheckPlateLoading(true);
+    const interval = setInterval(async () => {
+      const plate = await captureCheckPlate();
+      if (plate) {
+        setValidationPlate(plate);
+        toast.success("Number plate captured");
+        setShowCheckPlateScanner(false);
+      }
+    }, 1500);
+    return () => {
+      clearInterval(interval);
+      setCheckPlateLoading(false);
+    };
+  }, [showCheckPlateScanner]);
+
 
 
   const handleRequestSubmit = async () => {
@@ -179,36 +214,16 @@ export default function GuardView() {
     if (!webcamRef.current) return;
     const imageSrc = webcamRef.current.getScreenshot();
     if (!imageSrc) return;
-    setPlateLoading(true);
-    try {
-      const text = await parsePlate(imageSrc);
-      const plate = text.replace(/\s/g, "").trim();
-      setRequest((prev) => ({ ...prev, vehicleNumber: plate || "N/A" }));
-      toast.success("Number plate captured");
-    } catch (error) {
-      toast.error("Failed to read number plate");
-    } finally {
-      setPlateLoading(false);
-      setShowPlateScanner(false);
-    }
+    const text = await parsePlate(imageSrc);
+    return text.replace(/\s/g, "").trim();
   };
 
   const captureCheckPlate = async () => {
     if (!webcamRef.current) return;
     const imageSrc = webcamRef.current.getScreenshot();
     if (!imageSrc) return;
-    setCheckPlateLoading(true);
-    try {
-      const text = await parsePlate(imageSrc);
-      const plate = text.replace(/\s/g, "").trim();
-      setValidationPlate(plate || "N/A");
-      toast.success("Number plate captured");
-    } catch (error) {
-      toast.error("Failed to read number plate");
-    } finally {
-      setCheckPlateLoading(false);
-      setShowCheckPlateScanner(false);
-    }
+    const text = await parsePlate(imageSrc);
+    return text.replace(/\s/g, "").trim();
   };
 
   return (
@@ -269,10 +284,9 @@ export default function GuardView() {
                     <Button
                       type="button"
                       variant="secondary"
-                      disabled={plateLoading}
                       className="w-full text-md"
                     >
-                      {plateLoading ? "Processing..." : "Validate License Plate"}
+                      {plateLoading ? "Scanning..." : "Validate License Plate"}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="text-center">
@@ -281,9 +295,7 @@ export default function GuardView() {
                     </DialogHeader>
                     <div className="mt-4 flex flex-col items-center space-y-4">
                       <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
-                      <Button onClick={capturePlate} disabled={plateLoading}>
-                        {plateLoading ? "Processing..." : "Capture"}
-                      </Button>
+                      <p className="text-sm text-muted-foreground">Hold camera steady over plate</p>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -347,8 +359,8 @@ export default function GuardView() {
                       onOpenChange={setShowCheckPlateScanner}
                     >
                       <DialogTrigger asChild>
-                        <Button variant="secondary" className="w-full text-sm" disabled={checkPlateLoading}>
-                          {checkPlateLoading ? "Processing..." : "Validate License Plate"}
+                        <Button variant="secondary" className="w-full text-sm">
+                          {checkPlateLoading ? "Scanning..." : "Validate License Plate"}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="text-center">
@@ -357,9 +369,7 @@ export default function GuardView() {
                         </DialogHeader>
                         <div className="mt-4 flex flex-col items-center space-y-4">
                           <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
-                          <Button onClick={captureCheckPlate} disabled={checkPlateLoading}>
-                            {checkPlateLoading ? "Processing..." : "Capture"}
-                          </Button>
+                          <p className="text-sm text-muted-foreground">Hold camera steady over plate</p>
                         </div>
                       </DialogContent>
                     </Dialog>
