@@ -33,6 +33,7 @@ model Visitor {
   purpose                 String
   phone                   String?
   vehicleNumber           String?
+  vehicleImage            String?
   scheduledEntry          DateTime?
   scheduledExit           DateTime?
   checkInTime             DateTime?

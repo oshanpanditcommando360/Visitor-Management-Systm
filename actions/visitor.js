@@ -11,7 +11,7 @@ export const visitRequestByGuard = async (visitData) => {
       data: {
         name: visitData.name,
         purpose: visitData.purpose,
-        vehicleNumber: visitData.vehicleNumber ?? null,
+        vehicleImage: visitData.vehicleImage ?? null,
         clientId: visitData.clientId,
         department: visitData.department,
         endUserName: endUser?.name ?? null,
@@ -70,11 +70,11 @@ export const getScheduledVisitors = async () => {
   }
 };
 
-export const validateVisitor = async ({ visitorId, otp, vehicleNumber }) => {
+export const validateVisitor = async ({ visitorId, otp, vehicleImage }) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
     const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
-    if (vehicleNumber) updateData.vehicleNumber = vehicleNumber;
+    if (vehicleImage) updateData.vehicleImage = vehicleImage;
     const visitor = await db.visitor.update({
       where: { id: visitorId },
       data: updateData,
@@ -122,7 +122,7 @@ export const checkoutVisitor = async (visitorId) => {
   }
 };
 
-export const checkInVisitorByQr = async (visitorId, vehicleNumber) => {
+export const checkInVisitorByQr = async (visitorId, vehicleImage) => {
   try {
     const existing = await db.visitor.findUnique({ where: { id: visitorId } });
     if (!existing) {
@@ -138,7 +138,7 @@ export const checkInVisitorByQr = async (visitorId, vehicleNumber) => {
     }
 
     const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
-    if (vehicleNumber) updateData.vehicleNumber = vehicleNumber;
+    if (vehicleImage) updateData.vehicleImage = vehicleImage;
     const visitor = await db.visitor.update({
       where: { id: visitorId },
       data: updateData,
