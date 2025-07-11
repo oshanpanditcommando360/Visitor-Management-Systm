@@ -54,7 +54,12 @@ export const getVisitorLogsForGuard = async () => {
 export const getScheduledVisitors = async () => {
   try {
     return await db.visitor.findMany({
-      where: { requestedByGuard: false, status: "SCHEDULED" },
+      where: {
+        OR: [
+          { requestedByGuard: false, status: "SCHEDULED" },
+          { requestedByGuard: true, status: "APPROVED" },
+        ],
+      },
       orderBy: { scheduledEntry: "asc" },
       select: { id: true, name: true },
     });

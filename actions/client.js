@@ -125,18 +125,17 @@ export const approveVisitorRequest = async ({
     await db.visitor.update({
       where: { id: visitorId },
       data: {
-        status: "CHECKED_IN",
+        status: "APPROVED",
         scheduledEntry: now,
         scheduledExit,
-        checkInTime: now,
         approvedByClient: byClient,
       },
     });
 
     await createAlert({
       visitorId,
-      type: "CHECKED_IN",
-      message: `Visitor checked in`,
+      type: "SCHEDULED",
+      message: `Visit approved`,
     });
 
     return { success: true };
@@ -259,15 +258,13 @@ export const getAllVisitorRecords = async (clientId) => {
       checkOutTime: visitor.checkOutTime
         ? new Date(visitor.checkOutTime).toLocaleTimeString()
         : "-",
-      approvedBy: visitor.approvedByClient
-        ? "Client"
-        : visitor.department
-        ? visitor.department
-        : "-",
-      status:
-        visitor.status === "PENDING" && !visitor.scheduledEntry
-          ? "Not Checked In"
-          : visitor.status,
+      approvedBy:
+        visitor.approvedByClient === null
+          ? "-"
+          : visitor.approvedByClient
+          ? "Client"
+          : visitor.department,
+      status: visitor.status,
     }));
   } catch (err) {
     throw new Error("Failed to retrieve visitor records.");
