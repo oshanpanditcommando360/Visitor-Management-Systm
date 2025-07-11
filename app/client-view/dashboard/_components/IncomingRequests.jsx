@@ -130,6 +130,7 @@ export default function IncomingRequests({ onNew }) {
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
+                  <p className="text-sm text-muted-foreground">Vehicle No.: {item.vehicleNumber ?? "N/A"}</p>
                   {item.requestedByGuard ? (
                     <p className="text-xs text-muted-foreground">Requested by guard</p>
                   ) : item.requestedByEndUser ? (

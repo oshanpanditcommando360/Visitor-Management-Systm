@@ -11,6 +11,7 @@ export const visitRequestByGuard = async (visitData) => {
       data: {
         name: visitData.name,
         purpose: visitData.purpose,
+        vehicleNumber: visitData.vehicleNumber ?? null,
         clientId: visitData.clientId,
         department: visitData.department,
         endUserName: endUser?.name ?? null,

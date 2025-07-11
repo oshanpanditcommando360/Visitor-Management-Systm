@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import dynamic from "next/dynamic";
+import { createWorker } from "tesseract.js";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,7 @@ const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function GuardView() {
-  const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "" });
+  const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "", vehicleNumber: "N/A" });
   const [selectedVisitor, setSelectedVisitor] = useState("");
   const [otp, setOtp] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
@@ -50,6 +51,8 @@ export default function GuardView() {
   const [operation, setOperation] = useState("checkin");
   const [showScanner, setShowScanner] = useState(false);
   const [scanProcessing, setScanProcessing] = useState(false);
+  const [plateLoading, setPlateLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
 
   const fetchLogs = async () => {
@@ -109,7 +112,7 @@ export default function GuardView() {
     try {
       await visitRequestByGuard(request);
       toast.success("Visit request raised successfully.");
-      setRequest({ name: "", purpose: "", department: "", clientId: "" });
+      setRequest({ name: "", purpose: "", department: "", clientId: "", vehicleNumber: "N/A" });
     } catch (err) {
       toast.error("Failed to raise visit request.");
     } finally {
@@ -155,6 +158,29 @@ export default function GuardView() {
       } finally {
         setScanProcessing(false);
       }
+    }
+  };
+
+  const handlePlateCapture = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPlateLoading(true);
+    try {
+      const worker = await createWorker();
+      await worker.loadLanguage("eng");
+      await worker.initialize("eng");
+      const {
+        data: { text },
+      } = await worker.recognize(file);
+      await worker.terminate();
+      const plate = text.replace(/\s/g, "").trim();
+      setRequest((prev) => ({ ...prev, vehicleNumber: plate || "N/A" }));
+      toast.success("Number plate captured");
+    } catch (error) {
+      toast.error("Failed to read number plate");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setPlateLoading(false);
     }
   };
 
@@ -211,6 +237,24 @@ export default function GuardView() {
                     </SelectContent>
                   </Select>
                 </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  ref={fileInputRef}
+                  onChange={handlePlateCapture}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                  disabled={plateLoading}
+                  className="w-full text-md"
+                >
+                  {plateLoading ? "Processing..." : "Validate Number Plate"}
+                </Button>
+                <p className="text-sm text-muted-foreground text-center">Vehicle No.: {request.vehicleNumber}</p>
                 <Button
                   onClick={handleRequestSubmit}
                   disabled={!request.name || !request.purpose || !request.department || requestLoading}
