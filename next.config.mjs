@@ -7,6 +7,10 @@ const nextConfig = {
       fs: false,
       ws: false,
     };
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      ws: false,
+    };
     return config;
   },
 };
