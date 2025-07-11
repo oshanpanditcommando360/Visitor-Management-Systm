@@ -19,7 +19,8 @@ import {
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import dynamic from "next/dynamic";
-import { createWorker } from "tesseract.js";
+import Webcam from "react-webcam";
+import { ocrSpace } from "ocr-space-api-wrapper";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ export default function GuardView() {
   const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "", vehicleNumber: "N/A" });
   const [selectedVisitor, setSelectedVisitor] = useState("");
   const [otp, setOtp] = useState("");
+  const [validationPlate, setValidationPlate] = useState("N/A");
   const [requestLoading, setRequestLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [logs, setLogs] = useState([]);
@@ -52,7 +54,10 @@ export default function GuardView() {
   const [showScanner, setShowScanner] = useState(false);
   const [scanProcessing, setScanProcessing] = useState(false);
   const [plateLoading, setPlateLoading] = useState(false);
-  const fileInputRef = useRef(null);
+  const [showPlateScanner, setShowPlateScanner] = useState(false);
+  const [checkPlateLoading, setCheckPlateLoading] = useState(false);
+  const [showCheckPlateScanner, setShowCheckPlateScanner] = useState(false);
+  const webcamRef = useRef(null);
 
 
   const fetchLogs = async () => {
@@ -124,9 +129,14 @@ export default function GuardView() {
     setOtpLoading(true);
     try {
       if (operation === "checkin") {
-        await validateVisitor({ visitorId: selectedVisitor, otp });
+        await validateVisitor({
+          visitorId: selectedVisitor,
+          otp,
+          vehicleNumber: validationPlate !== "N/A" ? validationPlate : undefined,
+        });
         toast.success("Visitor validated");
         setOtp("");
+        setValidationPlate("N/A");
       } else {
         await checkoutVisitor(selectedVisitor);
         toast.success("Visitor checked out");
@@ -148,7 +158,11 @@ export default function GuardView() {
       setScanProcessing(true);
       setShowScanner(false);
       try {
-        await checkInVisitorByQr(result.text);
+        await checkInVisitorByQr(
+          result.text,
+          validationPlate !== "N/A" ? validationPlate : undefined
+        );
+        setValidationPlate("N/A");
         toast.success("Visitor validated");
         fetchLogs();
         fetchScheduled();
@@ -161,26 +175,41 @@ export default function GuardView() {
     }
   };
 
-  const handlePlateCapture = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const capturePlate = async () => {
+    if (!webcamRef.current) return;
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
     setPlateLoading(true);
     try {
-      const worker = await createWorker();
-      await worker.loadLanguage("eng");
-      await worker.initialize("eng");
-      const {
-        data: { text },
-      } = await worker.recognize(file);
-      await worker.terminate();
+      const res = await ocrSpace(imageSrc, { apiKey: "helloworld", language: "eng" });
+      const text = res?.ParsedResults?.[0]?.ParsedText || "";
       const plate = text.replace(/\s/g, "").trim();
       setRequest((prev) => ({ ...prev, vehicleNumber: plate || "N/A" }));
       toast.success("Number plate captured");
     } catch (error) {
       toast.error("Failed to read number plate");
     } finally {
-      if (fileInputRef.current) fileInputRef.current.value = "";
       setPlateLoading(false);
+      setShowPlateScanner(false);
+    }
+  };
+
+  const captureCheckPlate = async () => {
+    if (!webcamRef.current) return;
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
+    setCheckPlateLoading(true);
+    try {
+      const res = await ocrSpace(imageSrc, { apiKey: "helloworld", language: "eng" });
+      const text = res?.ParsedResults?.[0]?.ParsedText || "";
+      const plate = text.replace(/\s/g, "").trim();
+      setValidationPlate(plate || "N/A");
+      toast.success("Number plate captured");
+    } catch (error) {
+      toast.error("Failed to read number plate");
+    } finally {
+      setCheckPlateLoading(false);
+      setShowCheckPlateScanner(false);
     }
   };
 
@@ -237,23 +266,29 @@ export default function GuardView() {
                     </SelectContent>
                   </Select>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  ref={fileInputRef}
-                  onChange={handlePlateCapture}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  disabled={plateLoading}
-                  className="w-full text-md"
-                >
-                  {plateLoading ? "Processing..." : "Validate Number Plate"}
-                </Button>
+                <Dialog open={showPlateScanner} onOpenChange={setShowPlateScanner}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={plateLoading}
+                      className="w-full text-md"
+                    >
+                      {plateLoading ? "Processing..." : "Validate License Plate"}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="text-center">
+                    <DialogHeader>
+                      <DialogTitle>Capture License Plate</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4 flex flex-col items-center space-y-4">
+                      <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                      <Button onClick={capturePlate} disabled={plateLoading}>
+                        {plateLoading ? "Processing..." : "Capture"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <p className="text-sm text-muted-foreground text-center">Vehicle No.: {request.vehicleNumber}</p>
                 <Button
                   onClick={handleRequestSubmit}
@@ -304,6 +339,35 @@ export default function GuardView() {
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                     />
+                  </div>
+                )}
+
+                {operation === "checkin" && (
+                  <div className="space-y-2 text-center">
+                    <Dialog
+                      open={showCheckPlateScanner}
+                      onOpenChange={setShowCheckPlateScanner}
+                    >
+                      <DialogTrigger asChild>
+                        <Button variant="secondary" className="w-full text-sm" disabled={checkPlateLoading}>
+                          {checkPlateLoading ? "Processing..." : "Validate License Plate"}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="text-center">
+                        <DialogHeader>
+                          <DialogTitle>Capture License Plate</DialogTitle>
+                        </DialogHeader>
+                        <div className="mt-4 flex flex-col items-center space-y-4">
+                          <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                          <Button onClick={captureCheckPlate} disabled={checkPlateLoading}>
+                            {checkPlateLoading ? "Processing..." : "Capture"}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <p className="text-sm text-muted-foreground">
+                      Vehicle No.: {validationPlate}
+                    </p>
                   </div>
                 )}
 

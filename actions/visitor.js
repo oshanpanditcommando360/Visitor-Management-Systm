@@ -70,12 +70,14 @@ export const getScheduledVisitors = async () => {
   }
 };
 
-export const validateVisitor = async ({ visitorId, otp }) => {
+export const validateVisitor = async ({ visitorId, otp, vehicleNumber }) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
+    const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
+    if (vehicleNumber) updateData.vehicleNumber = vehicleNumber;
     const visitor = await db.visitor.update({
       where: { id: visitorId },
-      data: { status: "CHECKED_IN", checkInTime: new Date() },
+      data: updateData,
     });
     await createAlert({
       visitorId: visitor.id,
@@ -120,7 +122,7 @@ export const checkoutVisitor = async (visitorId) => {
   }
 };
 
-export const checkInVisitorByQr = async (visitorId) => {
+export const checkInVisitorByQr = async (visitorId, vehicleNumber) => {
   try {
     const existing = await db.visitor.findUnique({ where: { id: visitorId } });
     if (!existing) {
@@ -135,9 +137,11 @@ export const checkInVisitorByQr = async (visitorId) => {
       throw new Error("Already checked in with this QR.");
     }
 
+    const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
+    if (vehicleNumber) updateData.vehicleNumber = vehicleNumber;
     const visitor = await db.visitor.update({
       where: { id: visitorId },
-      data: { status: "CHECKED_IN", checkInTime: new Date() },
+      data: updateData,
     });
     await createAlert({
       visitorId: visitor.id,
