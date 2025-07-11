@@ -14,7 +14,7 @@ export const createClient = async (clientData) => {
                 email: clientData.email,
                 phone: clientData.phone,
                 password: hashedPassword,
-                department: clientData.department,
+                department: "ADMIN",
             },
         });
 
@@ -169,6 +169,8 @@ export const getAllVisitorRecords = async (clientId) => {
         requestedByEndUser: true,
         department: true,
         endUserName: true,
+        endUserId: true,
+        approvedByClient: true,
         status: true,
         createdAt: true,
       },
@@ -203,6 +205,7 @@ export const getAllVisitorRecords = async (clientId) => {
         : visitor.requestedByEndUser
         ? "End User"
         : "Client",
+      approvedBy: visitor.approvedByClient ? "Client" : visitor.endUserId ? "End User" : "-",
       status:
         visitor.status === "PENDING" && !visitor.scheduledEntry
           ? "Not Checked In"

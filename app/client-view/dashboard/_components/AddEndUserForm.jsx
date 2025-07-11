@@ -10,8 +10,9 @@ import { toast } from "sonner";
 
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
 const approvalTypes = ["CLIENT_ONLY", "END_USER_ONLY", "BOTH"];
+const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
-export default function AddEndUser() {
+export default function AddEndUserForm({ used = [] }) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -69,13 +70,15 @@ export default function AddEndUser() {
           </div>
           <div>
             <Label className="block text-sm font-medium mb-1">Department</Label>
-            <Select onValueChange={(v)=>setForm(p=>({...p,department:v}))}>
+            <Select onValueChange={(v) => setForm((p) => ({ ...p, department: v }))}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
-                {departments.map((d)=>(
-                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d} disabled={used.includes(d) || d === "ADMIN"}>
+                    {fmt(d)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -87,8 +90,8 @@ export default function AddEndUser() {
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                {approvalTypes.map((t)=>(
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                {approvalTypes.map((t) => (
+                  <SelectItem key={t} value={t}>{fmt(t)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

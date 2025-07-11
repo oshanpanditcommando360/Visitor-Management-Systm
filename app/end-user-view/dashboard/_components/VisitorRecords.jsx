@@ -9,6 +9,8 @@ import QRCode from "react-qr-code";
 import { getEndUserRecords } from "@/actions/enduser";
 import { toast } from "sonner";
 
+const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+
 export default function VisitorRecordsEndUser({ user }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -66,6 +68,7 @@ export default function VisitorRecordsEndUser({ user }) {
                   <th className="p-2 border-b font-medium">Actual CheckIn</th>
                   <th className="p-2 border-b font-medium">Actual CheckOut</th>
                   <th className="p-2 border-b font-medium">Added By</th>
+                  <th className="p-2 border-b font-medium">Approved By</th>
                   <th className="p-2 border-b font-medium">Status</th>
                   <th className="p-2 border-b font-medium">QR</th>
                 </tr>
@@ -74,16 +77,17 @@ export default function VisitorRecordsEndUser({ user }) {
                 {records.map((visitor) => (
                   <tr key={visitor.id}>
                     <td className="p-2">{visitor.name}</td>
-                    <td className="p-2">{new Date(visitor.createdAt).toLocaleDateString()}</td>
-                    <td className="p-2">{visitor.scheduledEntry ? new Date(visitor.scheduledEntry).toLocaleTimeString() : "-"}</td>
-                    <td className="p-2">{visitor.scheduledExit ? new Date(visitor.scheduledExit).toLocaleTimeString() : "-"}</td>
-                    <td className="p-2">{visitor.checkInTime ? new Date(visitor.checkInTime).toLocaleDateString() : "-"}</td>
-                    <td className="p-2">{visitor.checkInTime ? new Date(visitor.checkInTime).toLocaleTimeString() : "-"}</td>
-                    <td className="p-2">{visitor.checkOutTime ? new Date(visitor.checkOutTime).toLocaleTimeString() : "-"}</td>
-                    <td className="p-2">{visitor.requestedByGuard ? "Guard" : visitor.requestedByEndUser ? "End User" : "Client"}</td>
+                    <td className="p-2">{visitor.date}</td>
+                    <td className="p-2">{visitor.scheduledCheckIn}</td>
+                    <td className="p-2">{visitor.scheduledCheckOut}</td>
+                    <td className="p-2">{visitor.checkInDate}</td>
+                    <td className="p-2">{visitor.checkInTime}</td>
+                    <td className="p-2">{visitor.checkOutTime}</td>
+                    <td className="p-2">{visitor.addedBy}</td>
+                    <td className="p-2">{visitor.approvedBy}</td>
                     <td className="p-2">
                       <Badge variant={getBadgeVariant(visitor.status)} className="text-xs">
-                        {visitor.status}
+                        {fmt(visitor.status)}
                       </Badge>
                     </td>
                     <td className="p-2">

@@ -33,6 +33,7 @@ const BarcodeScanner = dynamic(
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function GuardView() {
   const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "" });
@@ -204,7 +205,7 @@ export default function GuardView() {
                     <SelectContent>
                       {departments.map((d) => (
                         <SelectItem key={d} value={d}>
-                          {d}
+                          {fmt(d)}
                         </SelectItem>
                       ))}
                     </SelectContent>

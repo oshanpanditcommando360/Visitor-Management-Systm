@@ -77,8 +77,33 @@ export const getEndUserRecords = async (endUserId) => {
     const visitors = await db.visitor.findMany({
       where: { endUserId },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        purpose: true,
+        scheduledEntry: true,
+        scheduledExit: true,
+        checkInTime: true,
+        checkOutTime: true,
+        approvedByClient: true,
+        endUserId: true,
+        status: true,
+        createdAt: true,
+      },
     });
-    return visitors;
+    return visitors.map((v) => ({
+      id: v.id,
+      name: v.name,
+      date: v.scheduledEntry ? new Date(v.scheduledEntry).toLocaleDateString() : new Date(v.createdAt).toLocaleDateString(),
+      scheduledCheckIn: v.scheduledEntry ? new Date(v.scheduledEntry).toLocaleTimeString() : "-",
+      scheduledCheckOut: v.scheduledExit ? new Date(v.scheduledExit).toLocaleTimeString() : "-",
+      checkInDate: v.checkInTime ? new Date(v.checkInTime).toLocaleDateString() : "-",
+      checkInTime: v.checkInTime ? new Date(v.checkInTime).toLocaleTimeString() : "-",
+      checkOutTime: v.checkOutTime ? new Date(v.checkOutTime).toLocaleTimeString() : "-",
+      addedBy: "End User",
+      approvedBy: v.approvedByClient ? "Client" : "End User",
+      status: v.status,
+    }));
   } catch (err) {
     throw new Error("Failed to retrieve records.");
   }
@@ -101,5 +126,40 @@ export const getEndUserAlerts = async (endUserId) => {
     }));
   } catch (err) {
     throw new Error("Failed to get alerts.");
+  }
+};
+
+export const getEndUsersByClient = async (clientId) => {
+  try {
+    return await db.endUser.findMany({
+      where: { clientId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.error("Failed to fetch end users:", err);
+    throw new Error("Could not get end users");
+  }
+};
+
+export const deleteEndUser = async (id) => {
+  try {
+    await db.endUser.delete({ where: { id } });
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to delete end user:", err);
+    throw new Error("Could not delete end user");
+  }
+};
+
+export const updateEndUserCredentials = async ({ id, email, password }) => {
+  try {
+    const data = {};
+    if (email) data.email = email;
+    if (password) data.password = await bcrypt.hash(password, 10);
+    await db.endUser.update({ where: { id }, data });
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to update end user:", err);
+    throw new Error("Could not update end user");
   }
 };

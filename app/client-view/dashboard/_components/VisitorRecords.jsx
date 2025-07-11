@@ -14,6 +14,8 @@ import QRCode from "react-qr-code";
 import { getAllVisitorRecords } from "@/actions/client";
 import { toast } from "sonner";
 
+const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+
 export default function VisitorRecords() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -64,6 +66,7 @@ export default function VisitorRecords() {
               <thead className="bg-muted">
                 <tr>
                   <th className="p-2 border-b font-medium">Name</th>
+                  <th className="p-2 border-b font-medium">Department</th>
                   <th className="p-2 border-b font-medium">Date</th>
                   <th className="p-2 border-b font-medium">Scheduled CheckIn</th>
                   <th className="p-2 border-b font-medium">Scheduled Checkout</th>
@@ -71,6 +74,7 @@ export default function VisitorRecords() {
                   <th className="p-2 border-b font-medium">Actual CheckIn</th>
                   <th className="p-2 border-b font-medium">Actual CheckOut</th>
                   <th className="p-2 border-b font-medium">Added By</th>
+                  <th className="p-2 border-b font-medium">Approved By</th>
                   <th className="p-2 border-b font-medium">Status</th>
                   <th className="p-2 border-b font-medium">QR</th>
                 </tr>
@@ -79,6 +83,7 @@ export default function VisitorRecords() {
                 {records.map((visitor) => (
                   <tr key={visitor.id}>
                     <td className="p-2">{visitor.name}</td>
+                    <td className="p-2">{fmt(visitor.department)}</td>
                     <td className="p-2">{visitor.date}</td>
                     <td className="p-2">{visitor.scheduledCheckIn}</td>
                     <td className="p-2">{visitor.scheduledCheckOut}</td>
@@ -86,9 +91,10 @@ export default function VisitorRecords() {
                     <td className="p-2">{visitor.checkInTime}</td>
                     <td className="p-2">{visitor.checkOutTime}</td>
                     <td className="p-2">{visitor.addedBy}</td>
+                    <td className="p-2">{visitor.approvedBy}</td>
                     <td className="p-2">
                       <Badge variant={getBadgeVariant(visitor.status)} className="text-xs">
-                        {visitor.status}
+                        {fmt(visitor.status)}
                       </Badge>
                     </td>
                     <td className="p-2">

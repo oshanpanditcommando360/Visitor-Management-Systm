@@ -18,7 +18,7 @@ const fields = [
   { name: "confirmPassword", placeholder: "Confirm Password", type: "password" },
 ];
 
-const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function ClientSignUp() {
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export default function ClientSignUp() {
     phone: "",
     password: "",
     confirmPassword: "",
-    department: "",
+    department: "ADMIN",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,9 +41,9 @@ export default function ClientSignUp() {
   const handleSubmit = async () => {
     setError("");
 
-    const { name, email, phone, password, confirmPassword, department } = formData;
+    const { name, email, phone, password, confirmPassword } = formData;
 
-    if (!name || !email || !phone || !password || !confirmPassword || !department) {
+    if (!name || !email || !phone || !password || !confirmPassword) {
       return setError("All fields are required.");
     }
 
@@ -53,7 +53,7 @@ export default function ClientSignUp() {
 
     setLoading(true);
     try {
-      const client = await createClient({ name, email, phone, password, department });
+      const client = await createClient({ name, email, phone, password });
 
       if (!client || client.error) {
         throw new Error(client?.error || "Failed to create client.");
@@ -90,18 +90,7 @@ export default function ClientSignUp() {
             />
           ))}
 
-          <Select onValueChange={(value) => setFormData((p) => ({ ...p, department: value }))}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Department" />
-            </SelectTrigger>
-            <SelectContent>
-              {departments.map((dep) => (
-                <SelectItem key={dep} value={dep}>
-                  {dep}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input value={fmt(formData.department)} disabled className="cursor-not-allowed" />
 
           <Button className="w-full" onClick={handleSubmit} disabled={loading}>
             {loading ? "Creating..." : "Sign Up"}
