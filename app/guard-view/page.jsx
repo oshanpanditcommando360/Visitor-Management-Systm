@@ -111,10 +111,13 @@ export default function GuardView() {
 
   const handleRequestSubmit = async () => {
     const client = await getCurrentClient();
-    request.clientId = client?.clientId;
+    const requestData = { ...request };
+    if (client?.clientId) {
+      requestData.clientId = client.clientId;
+    }
     setRequestLoading(true);
     try {
-      await visitRequestByGuard(request);
+      await visitRequestByGuard(requestData);
       toast.success("Visit request raised successfully.");
       setRequest({ name: "", purpose: "", department: "", clientId: "", vehicleImage: "" });
     } catch (err) {
