@@ -61,7 +61,7 @@ export default function ClientDashboard() {
         </div>
       </header>
 
-      <nav className="flex space-x-4 border-b pb-2 mb-4">
+      <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
         <Button
           variant={activeSection === "requests" ? "default" : "outline"}
           className={newRequests && activeSection !== "requests" ? "border-yellow-500" : ""}

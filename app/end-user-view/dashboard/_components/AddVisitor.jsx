@@ -77,7 +77,7 @@ export default function AddVisitorEndUser({ user }) {
             <Label className="block text-sm font-medium mb-1">Entry Time</Label>
             <Input type="time" name="entryTime" value={formData.entryTime} onChange={handleChange} required />
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1">
               <Label className="block text-sm font-medium mb-1">Duration (Hours)</Label>
               <Input type="number" name="durationHours" value={formData.durationHours} onChange={handleChange} min="0" required />

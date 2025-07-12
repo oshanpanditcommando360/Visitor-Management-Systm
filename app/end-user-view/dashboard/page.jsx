@@ -44,7 +44,7 @@ export default function EndUserDashboard(){
         <p className="text-gray-600">Post: {user.post}</p>
       </header>
 
-      <nav className="flex space-x-4 border-b pb-2 mb-4">
+      <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
         <Button variant={activeSection === "requests" ? "default" : "outline"} onClick={()=>setActiveSection("requests")}>Incoming Requests</Button>
         {user.canAddVisitor && (
           <Button variant={activeSection === "add" ? "default" : "outline"} onClick={()=>setActiveSection("add")}>Add a Visitor</Button>

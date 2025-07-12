@@ -408,8 +408,8 @@ export default function GuardView() {
                 {logs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No visitor requests found.</p>
                 ) : (
-                  <div className="overflow-auto">
-                    <table className="w-full text-sm text-left border-collapse">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[500px] w-full text-xs md:text-sm text-left border-collapse">
                       <thead className="bg-muted">
                         <tr>
                           <th className="p-2 border-b">Name</th>
