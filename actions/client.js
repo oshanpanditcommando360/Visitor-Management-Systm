@@ -92,25 +92,30 @@ export const approveVisitorRequest = async ({
 }) => {
   try {
     const now = new Date();
-    const existing = await db.visitor.findUnique({
-      where: { id: visitorId },
-      select: { requestedByGuard: true, requestedByEndUser: true, scheduledExit: true },
-    });
+  const existing = await db.visitor.findUnique({
+    where: { id: visitorId },
+    select: {
+      requestedByGuard: true,
+      requestedByEndUser: true,
+      scheduledExit: true,
+      name: true,
+    },
+  });
 
     if (!existing) throw new Error("Visitor not found");
 
     if (existing.requestedByEndUser) {
-      await db.visitor.update({
-        where: { id: visitorId },
-        data: { status: "SCHEDULED", approvedByClient: byClient },
-      });
-      await createAlert({
-        visitorId,
-        type: "SCHEDULED",
-        message: `Visit scheduled`,
-      });
-      return { success: true };
-    }
+    await db.visitor.update({
+      where: { id: visitorId },
+      data: { status: "SCHEDULED", approvedByClient: byClient },
+    });
+    await createAlert({
+      visitorId,
+      type: "SCHEDULED",
+      message: `Visit request for ${existing.name} approved`,
+    });
+    return { success: true };
+  }
 
     let scheduledExit;
     if (durationHours !== undefined || durationMinutes !== undefined) {
@@ -125,17 +130,20 @@ export const approveVisitorRequest = async ({
     await db.visitor.update({
       where: { id: visitorId },
       data: {
-        status: "APPROVED",
+        status: existing.requestedByGuard ? "CHECKED_IN" : "APPROVED",
         scheduledEntry: now,
         scheduledExit,
         approvedByClient: byClient,
+        checkInTime: existing.requestedByGuard ? now : undefined,
       },
     });
 
     await createAlert({
       visitorId,
-      type: "SCHEDULED",
-      message: `Visit approved`,
+      type: existing.requestedByGuard ? "CHECKED_IN" : "SCHEDULED",
+      message: existing.requestedByGuard
+        ? `${existing.name} checked in`
+        : `${existing.name} visit approved`,
     });
 
     return { success: true };

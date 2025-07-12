@@ -85,7 +85,12 @@ export default function AlertsEndUser({ user }) {
                   <div className="mt-1">{variant.icon}</div>
                   <div className="flex-1">
                     <AlertTitle>{variant.title}</AlertTitle>
-                    <AlertDescription>{alert.message}</AlertDescription>
+                    <AlertDescription>
+                      {alert.message}
+                      <span className="block text-xs mt-1 text-muted-foreground">
+                        {new Date(alert.triggeredAt).toLocaleString()}
+                      </span>
+                    </AlertDescription>
                   </div>
                 </AlertCmp>
               );
