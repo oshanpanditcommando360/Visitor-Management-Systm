@@ -1,6 +1,7 @@
 "use server";
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { createAlert } from "./alert";
 
 export const createEndUser = async (data) => {
   try {
@@ -64,6 +65,11 @@ export const addVisitorByEndUser = async ({
         requestedByGuard: false,
         status: "PENDING",
       },
+    });
+    await createAlert({
+      visitorId: visitor.id,
+      type: "REQUESTED",
+      message: `Visit request for ${visitor.name} sent to client`,
     });
     return visitor;
   } catch (err) {

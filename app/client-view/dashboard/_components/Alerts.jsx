@@ -100,7 +100,12 @@ export default function Alerts({ onNew }) {
                   <div className="mt-1">{variant.icon}</div>
                   <div className="flex-1">
                     <AlertTitle>{variant.title}</AlertTitle>
-                    <AlertDescription>{alert.message}</AlertDescription>
+                    <AlertDescription>
+                      {alert.message}
+                      <span className="block text-xs mt-1 text-muted-foreground">
+                        {new Date(alert.triggeredAt).toLocaleString()}
+                      </span>
+                    </AlertDescription>
                   </div>
                   <Button size="icon" variant="ghost" onClick={() => handleDelete(alert.id)}>
                     <X className="h-4 w-4" />
