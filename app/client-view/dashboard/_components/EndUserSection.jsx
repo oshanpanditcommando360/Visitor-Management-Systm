@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { getCurrentClient } from "@/actions/session";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EndUserList from "./EndUserList";
 import AddEndUserForm from "./AddEndUserForm";
@@ -9,8 +10,11 @@ export default function EndUserSection() {
   const [used, setUsed] = useState([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("clientInfo");
-    if (stored) setClientId(JSON.parse(stored).clientId);
+    const load = async () => {
+      const client = await getCurrentClient();
+      if (client) setClientId(client.clientId);
+    };
+    load();
   }, []);
 
   return (

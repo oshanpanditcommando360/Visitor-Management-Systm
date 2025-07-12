@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { getCurrentEndUser } from "@/actions/session";
 import { Button } from "@/components/ui/button";
 import IncomingRequests from "./_components/IncomingRequests";
 import AddVisitor from "./_components/AddVisitor";
@@ -10,8 +11,11 @@ export default function EndUserDashboard(){
   const [user,setUser]=useState(null);
   const [activeSection,setActiveSection]=useState("requests");
   useEffect(()=>{
-    const stored = localStorage.getItem("endUserInfo");
-    if(stored) setUser(JSON.parse(stored));
+    const load = async () => {
+      const data = await getCurrentEndUser();
+      if(data) setUser(data);
+    };
+    load();
   },[]);
 
   const renderSection = () => {
@@ -40,7 +44,7 @@ export default function EndUserDashboard(){
         <p className="text-gray-600">Post: {user.post}</p>
       </header>
 
-      <nav className="flex space-x-4 border-b pb-2 mb-4">
+      <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
         <Button variant={activeSection === "requests" ? "default" : "outline"} onClick={()=>setActiveSection("requests")}>Incoming Requests</Button>
         {user.canAddVisitor && (
           <Button variant={activeSection === "add" ? "default" : "outline"} onClick={()=>setActiveSection("add")}>Add a Visitor</Button>

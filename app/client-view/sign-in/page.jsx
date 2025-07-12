@@ -30,16 +30,8 @@ export default function ClientSignIn() {
         }
         setLoading(true);
         try {
-            const res = await signInClient({ email, password });
+            await signInClient({ email, password });
             toast.success("Login successful!");
-            localStorage.setItem("clientInfo", JSON.stringify({
-                name: res.name,
-                email: res.email,
-                phone: res.phone,
-                clientId:res.id,
-                department: res.department,
-            }));
-
             router.push("/client-view/dashboard");
         } catch (err) {
             setError(err.message || "An unexpected error occurred.");

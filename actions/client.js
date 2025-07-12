@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createAlert } from "./alert";
+import { setSession } from "@/lib/session";
 
 export const createClient = async (clientData) => {
     try {
@@ -37,7 +38,14 @@ export const signInClient = async ({ email, password }) => {
         if (!isValid) {
             throw new Error("Incorrect email/password.");
         }
-        return client;
+        setSession({ id: client.id, role: "client" });
+        return {
+            id: client.id,
+            name: client.name,
+            email: client.email,
+            phone: client.phone,
+            department: client.department,
+        };
     } catch (err) {
         console.error("Sign-in error:", err.message);
         throw new Error(err.message || "Something went wrong during sign-in.");

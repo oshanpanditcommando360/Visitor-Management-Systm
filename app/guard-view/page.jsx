@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
+import { 
     visitRequestByGuard,
     getVisitorLogsForGuard,
     getScheduledVisitors,
@@ -16,6 +16,7 @@ import {
     checkoutVisitor,
     checkInVisitorByQr,
   } from "@/actions/visitor";
+import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -109,8 +110,8 @@ export default function GuardView() {
 
 
   const handleRequestSubmit = async () => {
-    const client = JSON.parse(localStorage.getItem("clientInfo"));
-    request.clientId = client.clientId;
+    const client = await getCurrentClient();
+    request.clientId = client?.clientId;
     setRequestLoading(true);
     try {
       await visitRequestByGuard(request);
@@ -407,8 +408,8 @@ export default function GuardView() {
                 {logs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No visitor requests found.</p>
                 ) : (
-                  <div className="overflow-auto">
-                    <table className="w-full text-sm text-left border-collapse">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[500px] w-full text-xs md:text-sm text-left border-collapse">
                       <thead className="bg-muted">
                         <tr>
                           <th className="p-2 border-b">Name</th>

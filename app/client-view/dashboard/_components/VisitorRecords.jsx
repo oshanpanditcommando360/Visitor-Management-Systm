@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import QRCode from "react-qr-code";
 import { getAllVisitorRecords } from "@/actions/client";
+import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
@@ -22,7 +23,7 @@ export default function VisitorRecords() {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const client = JSON.parse(localStorage.getItem("clientInfo"));
+      const client = await getCurrentClient();
       const data = await getAllVisitorRecords(client?.clientId);
       setRecords(data);
     } catch (err) {
@@ -62,19 +63,19 @@ export default function VisitorRecords() {
         </div>
         {records.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
+            <table className="min-w-[800px] w-full text-xs md:text-sm text-left border-collapse">
               <thead className="bg-muted">
                 <tr>
                   <th className="p-2 border-b font-medium">Name</th>
-                  <th className="p-2 border-b font-medium">Vehicle No.</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Vehicle No.</th>
                   <th className="p-2 border-b font-medium">Department</th>
                   <th className="p-2 border-b font-medium">Date</th>
-                  <th className="p-2 border-b font-medium">Scheduled CheckIn</th>
-                  <th className="p-2 border-b font-medium">Scheduled Checkout</th>
-                  <th className="p-2 border-b font-medium">Actual CheckIn Date</th>
-                  <th className="p-2 border-b font-medium">Actual CheckIn</th>
-                  <th className="p-2 border-b font-medium">Actual CheckOut</th>
-                  <th className="p-2 border-b font-medium">Approved By</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled CheckIn</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled Checkout</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Actual CheckIn Date</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Actual CheckIn</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Actual CheckOut</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Approved By</th>
                   <th className="p-2 border-b font-medium">Status</th>
                   <th className="p-2 border-b font-medium">QR</th>
                 </tr>
@@ -82,8 +83,8 @@ export default function VisitorRecords() {
               <tbody className="divide-y">
                 {records.map((visitor) => (
                   <tr key={visitor.id}>
-                    <td className="p-2">{visitor.name}</td>
-                    <td className="p-2">
+                    <td className="p-2 whitespace-nowrap">{visitor.name}</td>
+                    <td className="p-2 hidden md:table-cell">
                       {visitor.vehicleImage ? (
                         <Dialog>
                           <DialogTrigger asChild>
@@ -100,14 +101,14 @@ export default function VisitorRecords() {
                         "N/A"
                       )}
                     </td>
-                    <td className="p-2">{fmt(visitor.department)}</td>
-                    <td className="p-2">{visitor.date}</td>
-                    <td className="p-2">{visitor.scheduledCheckIn}</td>
-                    <td className="p-2">{visitor.scheduledCheckOut}</td>
-                    <td className="p-2">{visitor.checkInDate}</td>
-                    <td className="p-2">{visitor.checkInTime}</td>
-                    <td className="p-2">{visitor.checkOutTime}</td>
-                    <td className="p-2">{visitor.approvedBy ? fmt(visitor.approvedBy) : "-"}</td>
+                    <td className="p-2 whitespace-nowrap">{fmt(visitor.department)}</td>
+                    <td className="p-2 whitespace-nowrap">{visitor.date}</td>
+                    <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.scheduledCheckIn}</td>
+                    <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.scheduledCheckOut}</td>
+                    <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.checkInDate}</td>
+                    <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.checkInTime}</td>
+                    <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.checkOutTime}</td>
+                    <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.approvedBy ? fmt(visitor.approvedBy) : "-"}</td>
                     <td className="p-2">
                       <Badge variant={getBadgeVariant(visitor.status)} className="text-xs">
                         {fmt(visitor.status)}

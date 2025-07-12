@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { getCurrentClient } from "@/actions/session";
 import { Button } from "@/components/ui/button";
 import IncomingRequests from "./_components/IncomingRequests";
 import AddVisitor from "./_components/AddVisitor";
@@ -14,8 +15,11 @@ export default function ClientDashboard() {
   const [newRequests, setNewRequests] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("clientInfo");
-    if (stored) setClientData(JSON.parse(stored));
+    const load = async () => {
+      const data = await getCurrentClient();
+      if (data) setClientData(data);
+    };
+    load();
   }, []);
 
   useEffect(() => {
@@ -57,7 +61,7 @@ export default function ClientDashboard() {
         </div>
       </header>
 
-      <nav className="flex space-x-4 border-b pb-2 mb-4">
+      <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
         <Button
           variant={activeSection === "requests" ? "default" : "outline"}
           className={newRequests && activeSection !== "requests" ? "border-yellow-500" : ""}

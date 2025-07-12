@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Info, CheckCircle, LogOut, AlertTriangle, RefreshCw, X } from "lucide-react";
 import { getClientAlerts, deleteAlert } from "@/actions/alert";
+import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
 const alertVariants = {
@@ -53,7 +54,7 @@ export default function Alerts({ onNew }) {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const client = JSON.parse(localStorage.getItem("clientInfo"));
+      const client = await getCurrentClient();
       const data = await getClientAlerts(client?.clientId);
       setAlerts(data);
       if (onNew && data.length > prevCount.current) {

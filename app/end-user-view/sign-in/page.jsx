@@ -22,18 +22,8 @@ export default function EndUserSignIn(){
     }
     setLoading(true);
     try{
-      const res = await signInEndUser(form);
+      await signInEndUser(form);
       toast.success("Login successful!");
-      localStorage.setItem("endUserInfo", JSON.stringify({
-        id: res.id,
-        name: res.name,
-        email: res.email,
-        department: res.department,
-        post: res.post,
-        approvalType: res.approvalType,
-        canAddVisitor: res.canAddVisitor,
-        clientId: res.clientId,
-      }));
       router.push("/end-user-view/dashboard");
     }catch(err){
       setError(err.message || "An error occurred");
