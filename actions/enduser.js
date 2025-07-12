@@ -31,7 +31,7 @@ export const signInEndUser = async ({ email, password }) => {
     if (!user) throw new Error("No account found with this email.");
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error("Incorrect email/password.");
-    setSession({ id: user.id, role: "enduser" });
+    await setSession({ id: user.id, role: "enduser" });
     return {
       id: user.id,
       name: user.name,

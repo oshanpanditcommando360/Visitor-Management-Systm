@@ -3,7 +3,7 @@ import { db } from "@/lib/prisma";
 import { getSessionData, clearSession } from "@/lib/session";
 
 export const getCurrentClient = async () => {
-  const session = getSessionData();
+  const session = await getSessionData();
   if (!session || session.role !== "client") return null;
   const c = await db.client.findUnique({ where: { id: session.id } });
   if (!c) return null;
@@ -17,7 +17,7 @@ export const getCurrentClient = async () => {
 };
 
 export const getCurrentEndUser = async () => {
-  const session = getSessionData();
+  const session = await getSessionData();
   if (!session || session.role !== "enduser") return null;
   const u = await db.endUser.findUnique({ where: { id: session.id } });
   if (!u) return null;
@@ -34,6 +34,6 @@ export const getCurrentEndUser = async () => {
 };
 
 export const signOut = async () => {
-  clearSession();
+  await clearSession();
   return { success: true };
 };
