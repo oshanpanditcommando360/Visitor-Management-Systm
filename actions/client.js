@@ -38,7 +38,7 @@ export const signInClient = async ({ email, password }) => {
         if (!isValid) {
             throw new Error("Incorrect email/password.");
         }
-        setSession({ id: client.id, role: "client" });
+        await setSession({ id: client.id, role: "client" });
         return {
             id: client.id,
             name: client.name,
