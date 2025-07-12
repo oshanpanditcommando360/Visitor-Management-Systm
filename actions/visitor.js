@@ -4,15 +4,23 @@ import { createAlert } from "./alert";
 
 export const visitRequestByGuard = async (visitData) => {
   try {
+    let clientId = visitData.clientId;
+    if (!clientId) {
+      const defaultClient = await db.client.findFirst();
+      if (!defaultClient) {
+        throw new Error("No client found");
+      }
+      clientId = defaultClient.id;
+    }
     const endUser = await db.endUser.findFirst({
-      where: { clientId: visitData.clientId, department: visitData.department },
+      where: { clientId, department: visitData.department },
     });
     const visitor = await db.visitor.create({
       data: {
         name: visitData.name,
         purpose: visitData.purpose,
         vehicleImage: visitData.vehicleImage ?? null,
-        clientId: visitData.clientId,
+        clientId,
         department: visitData.department,
         endUserName: endUser?.name ?? null,
         endUserId: endUser?.id ?? null,
