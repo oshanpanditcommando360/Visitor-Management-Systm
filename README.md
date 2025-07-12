@@ -4,6 +4,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Copy `.env.example` to `.env` and fill in the required values before running the development server.
 
+Install dependencies with `npm install`. This step generates the Prisma Client automatically. If you later modify `prisma/schema.prisma`, run `npx prisma generate` to update the client.
+
 First, run the development server:
 
 ```bash
