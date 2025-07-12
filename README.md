@@ -20,6 +20,26 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Database Setup
+
+1. Copy `.env.example` to `.env` and provide values.
+2. Install dependencies, which runs `prisma generate`:
+
+   ```bash
+   npm install
+   ```
+
+   This creates `lib/generated/prisma` containing the query engine.
+3. Apply database migrations:
+
+   ```bash
+   npx prisma migrate deploy
+   # or for development
+   npx prisma migrate dev
+   ```
+
+Production deployments require the `DATABASE_URL`, `DIRECT_URL`, and `JWT_SECRET` environment variables.
+
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
 ## Building for production
