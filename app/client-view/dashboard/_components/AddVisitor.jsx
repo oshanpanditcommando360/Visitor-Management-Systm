@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { addVisitorByClient } from "@/actions/client";
+import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
@@ -46,7 +47,7 @@ export default function AddVisitor() {
 
     setLoading(true);
     try {
-      const client = JSON.parse(localStorage.getItem("clientInfo"));
+      const client = await getCurrentClient();
       const scheduledEntry = new Date(`${visitDate.toDateString()} ${entryTime}`);
       const scheduledExit = new Date(scheduledEntry.getTime() +
         parseInt(durationHours) * 60 * 60 * 1000 +

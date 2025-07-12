@@ -2,6 +2,7 @@
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createAlert } from "./alert";
+import { setSession } from "@/lib/session";
 
 export const createEndUser = async (data) => {
   try {
@@ -30,7 +31,17 @@ export const signInEndUser = async ({ email, password }) => {
     if (!user) throw new Error("No account found with this email.");
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error("Incorrect email/password.");
-    return user;
+    setSession({ id: user.id, role: "enduser" });
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      department: user.department,
+      post: user.post,
+      approvalType: user.approvalType,
+      canAddVisitor: user.canAddVisitor,
+      clientId: user.clientId,
+    };
   } catch (err) {
     console.error("Sign-in error:", err);
     throw new Error(err.message || "Sign-in failed");

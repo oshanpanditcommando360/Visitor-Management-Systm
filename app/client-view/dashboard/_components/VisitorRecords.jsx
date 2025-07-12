@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import QRCode from "react-qr-code";
 import { getAllVisitorRecords } from "@/actions/client";
+import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
@@ -22,7 +23,7 @@ export default function VisitorRecords() {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const client = JSON.parse(localStorage.getItem("clientInfo"));
+      const client = await getCurrentClient();
       const data = await getAllVisitorRecords(client?.clientId);
       setRecords(data);
     } catch (err) {

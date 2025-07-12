@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { createEndUser } from "@/actions/enduser";
+import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
@@ -26,7 +27,7 @@ export default function AddEndUserForm({ used = [] }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const client = JSON.parse(localStorage.getItem("clientInfo"));
+    const client = await getCurrentClient();
     if (!client) return;
     if (!form.name || !form.email || !form.password || !form.department)
       return toast.error("Please fill all fields");
