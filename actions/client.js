@@ -125,17 +125,18 @@ export const approveVisitorRequest = async ({
     await db.visitor.update({
       where: { id: visitorId },
       data: {
-        status: "APPROVED",
+        status: existing.requestedByGuard ? "CHECKED_IN" : "APPROVED",
         scheduledEntry: now,
         scheduledExit,
         approvedByClient: byClient,
+        checkInTime: existing.requestedByGuard ? now : undefined,
       },
     });
 
     await createAlert({
       visitorId,
-      type: "SCHEDULED",
-      message: `Visit approved`,
+      type: existing.requestedByGuard ? "CHECKED_IN" : "SCHEDULED",
+      message: existing.requestedByGuard ? `Visitor checked in` : `Visit approved`,
     });
 
     return { success: true };

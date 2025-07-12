@@ -149,7 +149,9 @@ export default function IncomingRequests({ onNew }) {
                     )}
                   </p>
                   {item.requestedByGuard ? (
-                    <p className="text-xs text-muted-foreground">Requested by guard</p>
+                    <p className="text-xs text-muted-foreground">
+                      Requested by guard for {fmt(item.department)}
+                    </p>
                   ) : item.requestedByEndUser ? (
                     <p className="text-xs text-muted-foreground">Added by {fmt(item.department)}</p>
                   ) : null}

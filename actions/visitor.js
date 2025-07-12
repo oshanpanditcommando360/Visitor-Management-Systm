@@ -73,6 +73,11 @@ export const getScheduledVisitors = async () => {
 export const validateVisitor = async ({ visitorId, otp, vehicleImage }) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
+    const existing = await db.visitor.findUnique({ where: { id: visitorId }, select: { status: true } });
+    if (!existing) throw new Error("Visitor not found");
+    if (existing.status === "CHECKED_IN") {
+      throw new Error("Visitor already checked in with the qr/otp");
+    }
     const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
     if (vehicleImage) updateData.vehicleImage = vehicleImage;
     const visitor = await db.visitor.update({
@@ -134,7 +139,7 @@ export const checkInVisitorByQr = async (visitorId, vehicleImage) => {
     }
 
     if (existing.status === "CHECKED_IN") {
-      throw new Error("Already checked in with this QR.");
+      throw new Error("Visitor already checked in with the qr/otp");
     }
 
     const updateData = { status: "CHECKED_IN", checkInTime: new Date() };

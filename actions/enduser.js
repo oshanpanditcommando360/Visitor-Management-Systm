@@ -151,11 +151,17 @@ export const deleteEndUser = async (id) => {
   }
 };
 
-export const updateEndUserCredentials = async ({ id, email, password }) => {
+export const updateEndUserCredentials = async ({
+  id,
+  email,
+  password,
+  approvalType,
+}) => {
   try {
     const data = {};
     if (email) data.email = email;
     if (password) data.password = await bcrypt.hash(password, 10);
+    if (approvalType) data.approvalType = approvalType;
     await db.endUser.update({ where: { id }, data });
     return { success: true };
   } catch (err) {

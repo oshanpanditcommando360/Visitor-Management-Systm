@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import {
   getEndUsersByClient,
   deleteEndUser,
@@ -12,11 +13,12 @@ import { toast } from "sonner";
 
 const fmt = (v) =>
   v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+const approvalTypes = ["CLIENT_ONLY", "END_USER_ONLY", "BOTH"];
 
 export default function EndUserList({ clientId, onDeps }) {
   const [users, setUsers] = useState([]);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "", approvalType: "CLIENT_ONLY" });
 
   const fetchUsers = async () => {
     try {
@@ -47,7 +49,7 @@ export default function EndUserList({ clientId, onDeps }) {
       await updateEndUserCredentials({ id, ...form });
       toast.success("Updated");
       setEditing(null);
-      setForm({ email: "", password: "" });
+      setForm({ email: "", password: "", approvalType: "CLIENT_ONLY" });
       fetchUsers();
     } catch {
       toast.error("Failed to update");
@@ -65,6 +67,7 @@ export default function EndUserList({ clientId, onDeps }) {
                 <th className="p-2 border-b font-medium">Department</th>
                 <th className="p-2 border-b font-medium">Email</th>
                 <th className="p-2 border-b font-medium">Post</th>
+                <th className="p-2 border-b font-medium">Approval</th>
                 <th className="p-2 border-b font-medium">Actions</th>
               </tr>
             </thead>
@@ -85,6 +88,22 @@ export default function EndUserList({ clientId, onDeps }) {
                     )}
                   </td>
                   <td className="p-2">{u.post}</td>
+                  <td className="p-2">
+                    {editing === u.id ? (
+                      <Select onValueChange={(v)=>setForm(p=>({...p,approvalType:v}))} defaultValue={form.approvalType}>
+                        <SelectTrigger className="w-36">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {approvalTypes.map((t) => (
+                            <SelectItem key={t} value={t}>{fmt(t)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      fmt(u.approvalType)
+                    )}
+                  </td>
                   <td className="p-2 space-x-2">
                     {editing === u.id ? (
                       <>
@@ -98,13 +117,26 @@ export default function EndUserList({ clientId, onDeps }) {
                         <Button size="sm" onClick={() => handleUpdate(u.id)}>
                           Save
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditing(null);
+                            setForm({ email: "", password: "", approvalType: "CLIENT_ONLY" });
+                          }}
+                        >
                           Cancel
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button size="sm" onClick={() => {setEditing(u.id); setForm({ email: u.email, password: "" });}}>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setEditing(u.id);
+                            setForm({ email: u.email, password: "", approvalType: u.approvalType });
+                          }}
+                        >
                           Update
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => handleDelete(u.id)}>
