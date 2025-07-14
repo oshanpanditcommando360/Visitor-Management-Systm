@@ -4,9 +4,18 @@ import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createAlert } from "./alert";
 import { setSession } from "@/lib/session";
+import aj from "@/lib/arcjet";
+import { validateEmail } from "@arcjet/next";
 
 export const createClient = async (clientData) => {
     try {
+        const emailAj = aj.withRule(
+            validateEmail({ mode: "DRY_RUN", deny: ["DISPOSABLE", "INVALID"] })
+        );
+        const decision = await emailAj.protect({}, { email: clientData.email });
+        if (decision.isDenied()) {
+            throw new Error("Invalid email address");
+        }
         const hashedPassword = await bcrypt.hash(clientData.password, 10);
 
         const client = await db.client.create({
