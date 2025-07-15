@@ -49,7 +49,7 @@ Run the build command:
 npm run build
 ```
 
-This runs a "postbuild" script that copies the Prisma client from `node_modules/.prisma` and `lib/generated/prisma` into `.next/standalone` so the runtime can find the `query-engine-*` binaries.
+This runs a "postbuild" script that copies the Prisma client from `node_modules/.prisma` and `lib/generated/prisma` into both `.next/standalone` and `.next/server` so the runtime can find the `query-engine-*` binaries for Node and serverless functions.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
