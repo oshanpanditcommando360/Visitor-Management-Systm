@@ -202,9 +202,9 @@ export default function GuardView() {
         <CardContent className="p-6 md:p-8">
           <Tabs defaultValue="request">
             <TabsList className="w-full grid grid-cols-3 mb-6 border rounded-md overflow-hidden">
-              <TabsTrigger value="request" className="text-sm">Request for Visit</TabsTrigger>
+              <TabsTrigger value="request" className="text-sm">Request Visit</TabsTrigger>
               <TabsTrigger value="validate" className="text-sm">Validate Visit</TabsTrigger>
-              <TabsTrigger value="logs" className="text-sm">Visit Logs</TabsTrigger>
+              <TabsTrigger value="logs" className="text-sm">Logs</TabsTrigger>
             </TabsList>
 
             <TabsContent value="request">
