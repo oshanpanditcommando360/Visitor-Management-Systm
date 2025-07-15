@@ -10,8 +10,9 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.11.1",
     "@arcjet/next": "^1.0.0-beta.9",
+    "@prisma/client": "^6.11.1",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.11.1",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-select": "^2.2.5",
