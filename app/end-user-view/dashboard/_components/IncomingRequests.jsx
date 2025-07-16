@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -15,19 +15,24 @@ import {
 import { getPendingVisitorRequests, approveVisitorRequest, denyVisitorRequest } from "@/actions/client";
 import { toast } from "sonner";
 
-export default function IncomingRequestsEndUser({ user }) {
+export default function IncomingRequestsEndUser({ user, onNew }) {
   const [requests, setRequests] = useState([]);
   const [durations, setDurations] = useState({});
   const [selectedVisitor, setSelectedVisitor] = useState(null);
   const [popupIndex, setPopupIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const prevCount = useRef(0);
 
   const fetchRequests = async () => {
     setLoading(true);
     try {
       const data = await getPendingVisitorRequests(user.clientId, user.id);
       setRequests(data);
+      if (onNew && data.length > prevCount.current) {
+        onNew(true);
+      }
+      prevCount.current = data.length;
     } catch (err) {
       toast.error("Failed to fetch visitor requests.");
     } finally {

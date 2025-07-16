@@ -1,6 +1,36 @@
 "use server";
 import { db } from "@/lib/prisma";
 
+export const checkOverstayedVisitors = async () => {
+  const now = new Date();
+  const visitors = await db.visitor.findMany({
+    where: {
+      scheduledExit: { lt: now },
+      status: "CHECKED_IN",
+    },
+    select: { id: true, name: true },
+  });
+
+  for (const v of visitors) {
+    const existing = await db.alert.findFirst({
+      where: { visitorId: v.id, type: "TIMEOUT" },
+    });
+    if (!existing) {
+      await db.visitor.update({
+        where: { id: v.id },
+        data: { status: "OVERSTAYED" },
+      });
+      await db.alert.create({
+        data: {
+          visitorId: v.id,
+          type: "TIMEOUT",
+          message: `${v.name} has overstayed`,
+        },
+      });
+    }
+  }
+};
+
 export const createAlert = async ({ visitorId, type, message }) => {
   try {
     const alert = await db.alert.create({
@@ -15,6 +45,7 @@ export const createAlert = async ({ visitorId, type, message }) => {
 
 export const getClientAlerts = async (clientId) => {
   try {
+    await checkOverstayedVisitors();
     const alerts = await db.alert.findMany({
       where: {
         visitor: { clientId },

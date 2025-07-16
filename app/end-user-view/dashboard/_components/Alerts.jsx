@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert as AlertCmp, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -45,15 +45,20 @@ const alertVariants = {
   },
 };
 
-export default function AlertsEndUser({ user }) {
+export default function AlertsEndUser({ user, onNew }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const prevCount = useRef(0);
 
   const fetchAlerts = async () => {
     setLoading(true);
     try {
       const data = await getEndUserAlerts(user.id);
       setAlerts(data);
+      if (onNew && data.length > prevCount.current) {
+        onNew(true);
+      }
+      prevCount.current = data.length;
     } catch {
       toast.error("Failed to fetch alerts.");
     } finally {

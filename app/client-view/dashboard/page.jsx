@@ -13,6 +13,7 @@ export default function ClientDashboard() {
   const [clientData, setClientData] = useState(null);
   const [newAlerts, setNewAlerts] = useState(false);
   const [newRequests, setNewRequests] = useState(false);
+  const [newRecords, setNewRecords] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -25,24 +26,16 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (activeSection === "alerts") setNewAlerts(false);
     if (activeSection === "requests") setNewRequests(false);
+    if (activeSection === "records") setNewRecords(false);
   }, [activeSection]);
 
 
-  const renderSection = () => {
-    switch (activeSection) {
-      case "requests":
-        return <IncomingRequests onNew={setNewRequests} />;
-      case "add":
-        return <AddVisitor />;
-      case "enduser":
-        return <EndUserSection />;
-      case "records":
-        return <VisitorRecords />;
-      case "alerts":
-        return <Alerts onNew={setNewAlerts} />;
-      default:
-        return null;
-    }
+  const sections = {
+    requests: <IncomingRequests onNew={setNewRequests} />,
+    add: <AddVisitor />,
+    enduser: <EndUserSection />,
+    records: <VisitorRecords onNew={setNewRecords} />,
+    alerts: <Alerts onNew={setNewAlerts} />,
   };
 
   if (!clientData) return null;
@@ -64,25 +57,44 @@ export default function ClientDashboard() {
       <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
         <Button
           variant={activeSection === "requests" ? "default" : "outline"}
-          className={newRequests && activeSection !== "requests" ? "border-yellow-500" : ""}
+          className="relative"
           onClick={() => setActiveSection("requests")}
         >
           Incoming Requests
+          {newRequests && activeSection !== "requests" && (
+            <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
+          )}
         </Button>
         <Button variant={activeSection === "add" ? "default" : "outline"} onClick={() => setActiveSection("add")}>Add a Visitor</Button>
         <Button variant={activeSection === "enduser" ? "default" : "outline"} onClick={() => setActiveSection("enduser")}>End Users</Button>
-        <Button variant={activeSection === "records" ? "default" : "outline"} onClick={() => setActiveSection("records")}>Visitor Records</Button>
+        <Button
+          variant={activeSection === "records" ? "default" : "outline"}
+          className="relative"
+          onClick={() => setActiveSection("records")}
+        >
+          Visitor Records
+          {newRecords && activeSection !== "records" && (
+            <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
+          )}
+        </Button>
         <Button
           variant={activeSection === "alerts" ? "default" : "outline"}
-          className={newAlerts && activeSection !== "alerts" ? "border-yellow-500" : ""}
+          className="relative"
           onClick={() => setActiveSection("alerts")}
         >
           Alerts
+          {newAlerts && activeSection !== "alerts" && (
+            <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
+          )}
         </Button>
       </nav>
 
       <section className="bg-white p-4 rounded-lg shadow-md">
-        {renderSection()}
+        {Object.entries(sections).map(([key, component]) => (
+          <div key={key} className={activeSection === key ? "block" : "hidden"}>
+            {component}
+          </div>
+        ))}
       </section>
     </div>
   );
