@@ -120,6 +120,8 @@ export default function GuardView() {
       await visitRequestByGuard(requestData);
       toast.success("Visit request raised successfully.");
       setRequest({ name: "", purpose: "", department: "", clientId: "", vehicleImage: "" });
+      fetchLogs();
+      fetchScheduled();
     } catch (err) {
       toast.error("Failed to raise visit request.");
     } finally {
@@ -263,7 +265,11 @@ export default function GuardView() {
                       <DialogTitle>Capture License Plate</DialogTitle>
                     </DialogHeader>
                     <div className="mt-4 flex flex-col items-center space-y-4">
-                      <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                      <Webcam
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        videoConstraints={{ facingMode: { exact: "environment" } }}
+                      />
                       <Button onClick={handlePlateCapture} className="mt-2">Capture</Button>
                     </div>
                   </DialogContent>
@@ -339,7 +345,11 @@ export default function GuardView() {
                           <DialogTitle>Capture License Plate</DialogTitle>
                         </DialogHeader>
                         <div className="mt-4 flex flex-col items-center space-y-4">
-                          <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                          <Webcam
+                            ref={webcamRef}
+                            screenshotFormat="image/jpeg"
+                            videoConstraints={{ facingMode: { exact: "environment" } }}
+                          />
                           <Button onClick={handleCheckPlateCapture} className="mt-2">Capture</Button>
                         </div>
                       </DialogContent>

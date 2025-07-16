@@ -1,7 +1,7 @@
 "use server";
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { createAlert } from "./alert";
+import { createAlert, checkOverstayedVisitors } from "./alert";
 import { setSession } from "@/lib/session";
 
 export const createEndUser = async (data) => {
@@ -128,6 +128,7 @@ export const getEndUserRecords = async (endUserId) => {
 
 export const getEndUserAlerts = async (endUserId) => {
   try {
+    await checkOverstayedVisitors();
     const alerts = await db.alert.findMany({
       where: { visitor: { endUserId } },
       orderBy: { triggeredAt: "desc" },

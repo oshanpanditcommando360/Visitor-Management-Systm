@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,20 @@ import { toast } from "sonner";
 
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
-export default function VisitorRecords() {
+export default function VisitorRecords({ onNew }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  const prevCount = useRef(0);
   const fetchRecords = async () => {
     setLoading(true);
     try {
       const client = await getCurrentClient();
       const data = await getAllVisitorRecords(client?.clientId);
       setRecords(data);
+      if (onNew && data.length > prevCount.current) {
+        onNew(true);
+      }
+      prevCount.current = data.length;
     } catch (err) {
       toast.error("Failed to load visitor records.");
     } finally {
