@@ -2,6 +2,36 @@
 import { db } from "@/lib/prisma";
 import { createAlert } from "./alert";
 
+export const checkOverstayedVisitors = async () => {
+  try {
+    const now = new Date();
+    const overstayed = await db.visitor.findMany({
+      where: {
+        status: "CHECKED_IN",
+        scheduledExit: { lt: now },
+      },
+    });
+    for (const v of overstayed) {
+      await db.visitor.update({
+        where: { id: v.id },
+        data: { status: "OVERSTAYED" },
+      });
+      const exists = await db.alert.findFirst({
+        where: { visitorId: v.id, type: "TIMEOUT" },
+      });
+      if (!exists) {
+        await createAlert({
+          visitorId: v.id,
+          type: "TIMEOUT",
+          message: `${v.name} has overstayed`,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Failed to mark overstayed visitors", err);
+  }
+};
+
 export const visitRequestByGuard = async (visitData) => {
   try {
     let clientId = visitData.clientId;
@@ -43,6 +73,7 @@ export const visitRequestByGuard = async (visitData) => {
 
 export const getVisitorLogsForGuard = async () => {
   try {
+    await checkOverstayedVisitors();
     const visitors = await db.visitor.findMany({
       where: {
         OR: [
@@ -62,6 +93,7 @@ export const getVisitorLogsForGuard = async () => {
 
 export const getScheduledVisitors = async () => {
   try {
+    await checkOverstayedVisitors();
     return await db.visitor.findMany({
       where: {
         OR: [
@@ -106,6 +138,7 @@ export const validateVisitor = async ({ visitorId, otp, vehicleImage }) => {
 
 export const getCheckedInVisitors = async () => {
   try {
+    await checkOverstayedVisitors();
     return await db.visitor.findMany({
       where: { status: "CHECKED_IN" },
       orderBy: { checkInTime: "desc" },

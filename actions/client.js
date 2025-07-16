@@ -6,6 +6,7 @@ import { createAlert } from "./alert";
 import { setSession } from "@/lib/session";
 import aj from "@/lib/arcjet";
 import { validateEmail } from "@arcjet/next";
+import { checkOverstayedVisitors } from "./visitor";
 
 export const createClient = async (clientData) => {
     try {
@@ -61,9 +62,10 @@ export const signInClient = async ({ email, password }) => {
     }
 }
 
-export const getPendingVisitorRequests = async (clientId, endUserId) => {
+export const getPendingVisitorRequests = async (_clientId, endUserId) => {
   try {
-    const base = { status: "PENDING", clientId };
+    await checkOverstayedVisitors();
+    const base = { status: "PENDING" };
     let where;
     if (endUserId) {
       // for end user dashboard
@@ -233,10 +235,10 @@ export const addVisitorByClient = async ({
   }
 };
 
-export const getAllVisitorRecords = async (clientId) => {
+export const getAllVisitorRecords = async () => {
   try {
+    await checkOverstayedVisitors();
     const visitors = await db.visitor.findMany({
-      where: { clientId },
       orderBy: {
         createdAt: "desc",
       },

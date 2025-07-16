@@ -35,6 +35,7 @@ const BarcodeScanner = dynamic(
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+const videoConstraints = { facingMode: { ideal: "environment" } };
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function GuardView() {
@@ -120,6 +121,9 @@ export default function GuardView() {
       await visitRequestByGuard(requestData);
       toast.success("Visit request raised successfully.");
       setRequest({ name: "", purpose: "", department: "", clientId: "", vehicleImage: "" });
+      fetchLogs();
+      fetchScheduled();
+      fetchCheckedIn();
     } catch (err) {
       toast.error("Failed to raise visit request.");
     } finally {
@@ -220,7 +224,7 @@ export default function GuardView() {
                 </div>
                 <div className="space-y-1">
                   <Label>Purpose of Visit</Label>
-                  <Select onValueChange={(value) => setRequest({ ...request, purpose: value })}>
+                  <Select value={request.purpose} onValueChange={(value) => setRequest({ ...request, purpose: value })}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select purpose" />
                     </SelectTrigger>
@@ -235,7 +239,7 @@ export default function GuardView() {
                 </div>
                 <div className="space-y-1">
                   <Label>Department</Label>
-                  <Select onValueChange={(value) => setRequest({ ...request, department: value })}>
+                  <Select value={request.department} onValueChange={(value) => setRequest({ ...request, department: value })}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
@@ -263,7 +267,11 @@ export default function GuardView() {
                       <DialogTitle>Capture License Plate</DialogTitle>
                     </DialogHeader>
                     <div className="mt-4 flex flex-col items-center space-y-4">
-                      <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                      <Webcam
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        videoConstraints={videoConstraints}
+                      />
                       <Button onClick={handlePlateCapture} className="mt-2">Capture</Button>
                     </div>
                   </DialogContent>
@@ -339,7 +347,11 @@ export default function GuardView() {
                           <DialogTitle>Capture License Plate</DialogTitle>
                         </DialogHeader>
                         <div className="mt-4 flex flex-col items-center space-y-4">
-                          <Webcam ref={webcamRef} screenshotFormat="image/jpeg" />
+                          <Webcam
+                            ref={webcamRef}
+                            screenshotFormat="image/jpeg"
+                            videoConstraints={videoConstraints}
+                          />
                           <Button onClick={handleCheckPlateCapture} className="mt-2">Capture</Button>
                         </div>
                       </DialogContent>

@@ -13,7 +13,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { getPendingVisitorRequests,approveVisitorRequest,denyVisitorRequest } from "@/actions/client";
-import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
 const fmt = (v) =>
@@ -31,8 +30,7 @@ export default function IncomingRequests({ onNew }) {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const client = await getCurrentClient();
-      const data = await getPendingVisitorRequests(client?.clientId);
+      const data = await getPendingVisitorRequests();
       setRequests(data);
       if (onNew && data.length > prevCount.current) {
         onNew(true);

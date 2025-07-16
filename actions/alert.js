@@ -13,23 +13,20 @@ export const createAlert = async ({ visitorId, type, message }) => {
   }
 };
 
-export const getClientAlerts = async (clientId) => {
+export const getClientAlerts = async () => {
   try {
     const alerts = await db.alert.findMany({
-      where: {
-        visitor: { clientId },
-      },
       orderBy: { triggeredAt: "desc" },
       include: { visitor: { select: { name: true } } },
       take: 20,
     });
-    return alerts.map((a) => ({
-      id: a.id,
-      type: a.type,
-      message: a.message,
-      triggeredAt: a.triggeredAt,
-      visitorName: a.visitor.name,
-    }));
+      return alerts.map((a) => ({
+        id: a.id,
+        type: a.type,
+        message: a.message,
+        triggeredAt: a.triggeredAt,
+        visitorName: a.visitor.name,
+      }));
   } catch (error) {
     console.error("Error fetching alerts:", error);
     throw new Error("Failed to fetch alerts.");

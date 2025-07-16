@@ -114,7 +114,7 @@ model EndUser {
   name         String
   email        String       @unique
   password     String
-  department   Department
+  department   Department   @unique
   post         String
   approvalType ApprovalType
   canAddVisitor Boolean @default(false)

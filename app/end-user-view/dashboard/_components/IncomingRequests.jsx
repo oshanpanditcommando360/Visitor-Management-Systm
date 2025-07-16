@@ -26,7 +26,7 @@ export default function IncomingRequestsEndUser({ user }) {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const data = await getPendingVisitorRequests(user.clientId, user.id);
+      const data = await getPendingVisitorRequests(undefined, user.id);
       setRequests(data);
     } catch (err) {
       toast.error("Failed to fetch visitor requests.");
