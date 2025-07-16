@@ -7,6 +7,7 @@ import { setSession } from "@/lib/session";
 import aj from "@/lib/arcjet";
 import { validateEmail } from "@arcjet/next";
 import { checkOverstayedVisitors } from "./visitor";
+import { getCurrentClient } from "./session";
 
 export const createClient = async (clientData) => {
     try {
@@ -111,6 +112,7 @@ export const approveVisitorRequest = async ({
 }) => {
   try {
     const now = new Date();
+    const current = await getCurrentClient();
   const existing = await db.visitor.findUnique({
     where: { id: visitorId },
     select: {
@@ -126,7 +128,11 @@ export const approveVisitorRequest = async ({
     if (existing.requestedByEndUser) {
     await db.visitor.update({
       where: { id: visitorId },
-      data: { status: "SCHEDULED", approvedByClient: byClient },
+      data: {
+        status: "SCHEDULED",
+        approvedByClient: byClient,
+        approvedByAdmin: current?.name ?? null,
+      },
     });
     await createAlert({
       visitorId,
@@ -153,6 +159,7 @@ export const approveVisitorRequest = async ({
         scheduledEntry: now,
         scheduledExit,
         approvedByClient: byClient,
+        approvedByAdmin: current?.name ?? null,
         checkInTime: existing.requestedByGuard ? now : undefined,
       },
     });
@@ -202,6 +209,7 @@ export const addVisitorByClient = async ({
   clientId,
 }) => {
   try {
+    const client = await db.client.findUnique({ where: { id: clientId } });
     const endUser = await db.endUser.findFirst({
       where: { clientId, department },
     });
@@ -219,6 +227,7 @@ export const addVisitorByClient = async ({
         requestedByEndUser: false,
         requestedByGuard: false,
         approvedByClient: true,
+        approvedByAdmin: client?.name ?? null,
         status: "SCHEDULED",
       },
     });
@@ -256,6 +265,7 @@ export const getAllVisitorRecords = async () => {
         endUserName: true,
         endUserId: true,
         approvedByClient: true,
+        approvedByAdmin: true,
         vehicleImage: true,
         status: true,
         createdAt: true,
@@ -291,8 +301,8 @@ export const getAllVisitorRecords = async () => {
         visitor.approvedByClient === null
           ? "-"
           : visitor.approvedByClient
-          ? "Client"
-          : visitor.department,
+          ? visitor.approvedByAdmin || "Client"
+          : visitor.endUserName ?? visitor.department,
       status: visitor.status,
     }));
   } catch (err) {

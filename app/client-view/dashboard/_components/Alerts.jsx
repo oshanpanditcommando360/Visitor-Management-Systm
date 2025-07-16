@@ -56,7 +56,7 @@ export default function Alerts({ onNew }) {
       const data = await getClientAlerts();
       setAlerts(data);
       if (onNew && data.length > prevCount.current) {
-        onNew(true);
+        onNew(data.length - prevCount.current);
       }
       prevCount.current = data.length;
     } catch (err) {

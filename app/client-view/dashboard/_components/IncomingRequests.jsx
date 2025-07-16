@@ -33,7 +33,7 @@ export default function IncomingRequests({ onNew }) {
       const data = await getPendingVisitorRequests();
       setRequests(data);
       if (onNew && data.length > prevCount.current) {
-        onNew(true);
+        onNew(data.length - prevCount.current);
       }
       prevCount.current = data.length;
     } catch (err) {

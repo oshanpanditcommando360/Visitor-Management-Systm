@@ -43,6 +43,7 @@ model Visitor {
   requestedByGuard        Boolean      @default(false)
   requestedByEndUser     Boolean      @default(false)
   approvedByClient        Boolean?
+  approvedByAdmin         String?
   status                  VisitorStatus @default(PENDING)
   clientId                String
   client                  Client    @relation("ClientVisitors", fields: [clientId], references: [id])

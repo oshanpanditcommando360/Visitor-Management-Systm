@@ -105,6 +105,7 @@ export const getEndUserRecords = async (endUserId) => {
         endUserId: true,
         department: true,
         approvedByClient: true,
+        approvedByAdmin: true,
         status: true,
         createdAt: true,
       },
@@ -118,7 +119,12 @@ export const getEndUserRecords = async (endUserId) => {
       checkInDate: v.checkInTime ? new Date(v.checkInTime).toLocaleDateString() : "-",
       checkInTime: v.checkInTime ? new Date(v.checkInTime).toLocaleTimeString() : "-",
       checkOutTime: v.checkOutTime ? new Date(v.checkOutTime).toLocaleTimeString() : "-",
-      approvedBy: v.approvedByClient === null ? "-" : v.approvedByClient ? "Client" : v.department,
+      approvedBy:
+        v.approvedByClient === null
+          ? "-"
+          : v.approvedByClient
+          ? v.approvedByAdmin || "Client"
+          : v.department,
       status: v.status,
     }));
   } catch (err) {

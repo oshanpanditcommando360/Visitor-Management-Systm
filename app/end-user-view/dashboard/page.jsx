@@ -10,6 +10,9 @@ import Alerts from "./_components/Alerts";
 export default function EndUserDashboard(){
   const [user,setUser]=useState(null);
   const [activeSection,setActiveSection]=useState("requests");
+  const [newAlerts,setNewAlerts]=useState(0);
+  const [newRequests,setNewRequests]=useState(0);
+  const [newRecords,setNewRecords]=useState(0);
   useEffect(()=>{
     const load = async () => {
       const data = await getCurrentEndUser();
@@ -18,21 +21,27 @@ export default function EndUserDashboard(){
     load();
   },[]);
 
-  const renderSection = () => {
-    if(!user) return null;
-    switch(activeSection){
-      case "requests":
-        return <IncomingRequests user={user} />;
-      case "add":
-        return <AddVisitor user={user} />;
-      case "records":
-        return <VisitorRecords user={user} />;
-      case "alerts":
-        return <Alerts user={user} />;
-      default:
-        return null;
-    }
-  };
+  useEffect(() => {
+    if (activeSection === "alerts") setNewAlerts(0);
+    if (activeSection === "requests") setNewRequests(0);
+    if (activeSection === "records") setNewRecords(0);
+  }, [activeSection]);
+
+  const sections = user
+    ? {
+        requests: (
+          <IncomingRequests
+            user={user}
+            onNew={(n) => setNewRequests((c) => c + n)}
+          />
+        ),
+        add: user.canAddVisitor ? <AddVisitor user={user} /> : null,
+        records: (
+          <VisitorRecords user={user} onNew={(n) => setNewRecords((c) => c + n)} />
+        ),
+        alerts: <Alerts user={user} onNew={(n) => setNewAlerts((c) => c + n)} />,
+      }
+    : {};
 
   if(!user) return null;
 
@@ -45,16 +54,53 @@ export default function EndUserDashboard(){
       </header>
 
       <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
-        <Button variant={activeSection === "requests" ? "default" : "outline"} onClick={()=>setActiveSection("requests")}>Incoming Requests</Button>
+        <Button
+          variant={activeSection === "requests" ? "default" : "outline"}
+          onClick={() => setActiveSection("requests")}
+          className="relative"
+        >
+          Incoming Requests
+          {newRequests > 0 && activeSection !== "requests" && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              {newRequests}
+            </span>
+          )}
+        </Button>
         {user.canAddVisitor && (
           <Button variant={activeSection === "add" ? "default" : "outline"} onClick={()=>setActiveSection("add")}>Add a Visitor</Button>
         )}
-        <Button variant={activeSection === "records" ? "default" : "outline"} onClick={()=>setActiveSection("records")}>Visitor Records</Button>
-        <Button variant={activeSection === "alerts" ? "default" : "outline"} onClick={()=>setActiveSection("alerts")}>Alerts</Button>
+        <Button
+          variant={activeSection === "records" ? "default" : "outline"}
+          onClick={() => setActiveSection("records")}
+          className="relative"
+        >
+          Visitor Records
+          {newRecords > 0 && activeSection !== "records" && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              {newRecords}
+            </span>
+          )}
+        </Button>
+        <Button
+          variant={activeSection === "alerts" ? "default" : "outline"}
+          onClick={() => setActiveSection("alerts")}
+          className="relative"
+        >
+          Alerts
+          {newAlerts > 0 && activeSection !== "alerts" && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              {newAlerts}
+            </span>
+          )}
+        </Button>
       </nav>
 
       <section className="bg-white p-4 rounded-lg shadow-md">
-        {renderSection()}
+        {Object.entries(sections).map(([key, comp]) => (
+          <div key={key} className={activeSection === key ? "block" : "hidden"}>
+            {comp}
+          </div>
+        ))}
       </section>
     </div>
   );

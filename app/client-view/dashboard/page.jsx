@@ -11,8 +11,9 @@ import EndUserSection from "./_components/EndUserSection";
 export default function ClientDashboard() {
   const [activeSection, setActiveSection] = useState("requests");
   const [clientData, setClientData] = useState(null);
-  const [newAlerts, setNewAlerts] = useState(false);
-  const [newRequests, setNewRequests] = useState(false);
+  const [newAlerts, setNewAlerts] = useState(0);
+  const [newRequests, setNewRequests] = useState(0);
+  const [newRecords, setNewRecords] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -23,26 +24,18 @@ export default function ClientDashboard() {
   }, []);
 
   useEffect(() => {
-    if (activeSection === "alerts") setNewAlerts(false);
-    if (activeSection === "requests") setNewRequests(false);
+    if (activeSection === "alerts") setNewAlerts(0);
+    if (activeSection === "requests") setNewRequests(0);
+    if (activeSection === "records") setNewRecords(0);
   }, [activeSection]);
 
 
-  const renderSection = () => {
-    switch (activeSection) {
-      case "requests":
-        return <IncomingRequests onNew={setNewRequests} />;
-      case "add":
-        return <AddVisitor />;
-      case "enduser":
-        return <EndUserSection />;
-      case "records":
-        return <VisitorRecords />;
-      case "alerts":
-        return <Alerts onNew={setNewAlerts} />;
-      default:
-        return null;
-    }
+  const sections = {
+    requests: <IncomingRequests onNew={(n) => setNewRequests((c) => c + n)} />,
+    add: <AddVisitor />,
+    enduser: <EndUserSection />,
+    records: <VisitorRecords onNew={(n) => setNewRecords((c) => c + n)} />,
+    alerts: <Alerts onNew={(n) => setNewAlerts((c) => c + n)} />,
   };
 
   if (!clientData) return null;
@@ -64,25 +57,50 @@ export default function ClientDashboard() {
       <nav className="flex flex-wrap gap-2 border-b pb-2 mb-4">
         <Button
           variant={activeSection === "requests" ? "default" : "outline"}
-          className={newRequests && activeSection !== "requests" ? "border-yellow-500" : ""}
           onClick={() => setActiveSection("requests")}
+          className="relative"
         >
           Incoming Requests
+          {newRequests > 0 && activeSection !== "requests" && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              {newRequests}
+            </span>
+          )}
         </Button>
         <Button variant={activeSection === "add" ? "default" : "outline"} onClick={() => setActiveSection("add")}>Add a Visitor</Button>
         <Button variant={activeSection === "enduser" ? "default" : "outline"} onClick={() => setActiveSection("enduser")}>End Users</Button>
-        <Button variant={activeSection === "records" ? "default" : "outline"} onClick={() => setActiveSection("records")}>Visitor Records</Button>
+        <Button
+          variant={activeSection === "records" ? "default" : "outline"}
+          onClick={() => setActiveSection("records")}
+          className="relative"
+        >
+          Visitor Records
+          {newRecords > 0 && activeSection !== "records" && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              {newRecords}
+            </span>
+          )}
+        </Button>
         <Button
           variant={activeSection === "alerts" ? "default" : "outline"}
-          className={newAlerts && activeSection !== "alerts" ? "border-yellow-500" : ""}
           onClick={() => setActiveSection("alerts")}
+          className="relative"
         >
           Alerts
+          {newAlerts > 0 && activeSection !== "alerts" && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+              {newAlerts}
+            </span>
+          )}
         </Button>
       </nav>
 
       <section className="bg-white p-4 rounded-lg shadow-md">
-        {renderSection()}
+        {Object.entries(sections).map(([key, component]) => (
+          <div key={key} className={activeSection === key ? "block" : "hidden"}>
+            {component}
+          </div>
+        ))}
       </section>
     </div>
   );
