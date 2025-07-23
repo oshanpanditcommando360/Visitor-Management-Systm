@@ -233,6 +233,42 @@ export const addVisitorByClient = async ({
   }
 };
 
+export const addContractorByClient = async ({
+  name,
+  phone,
+  materialType,
+  scheduledEntry,
+  scheduledExit,
+  clientId,
+}) => {
+  try {
+    const contractor = await db.visitor.create({
+      data: {
+        name,
+        phone,
+        materialType,
+        scheduledEntry: new Date(scheduledEntry),
+        scheduledExit: new Date(scheduledExit),
+        clientId,
+        requestedByGuard: false,
+        requestedByEndUser: false,
+        approvedByClient: true,
+        isContractor: true,
+        status: "SCHEDULED",
+      },
+    });
+    await createAlert({
+      visitorId: contractor.id,
+      type: "SCHEDULED",
+      message: `${contractor.name} contractor scheduled`,
+    });
+    return contractor;
+  } catch (err) {
+    console.error("Failed to add contractor:", err);
+    throw new Error("Could not add contractor.");
+  }
+};
+
 export const getAllVisitorRecords = async (clientId) => {
   try {
     const visitors = await db.visitor.findMany({
@@ -295,6 +331,43 @@ export const getAllVisitorRecords = async (clientId) => {
     }));
   } catch (err) {
     throw new Error("Failed to retrieve visitor records.");
+  }
+};
+
+export const getAllContractorRecords = async (clientId) => {
+  try {
+    const contractors = await db.visitor.findMany({
+      where: { clientId, isContractor: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return contractors.map((c) => ({
+      id: c.id,
+      name: c.name,
+      materialType: c.materialType ?? "NONE",
+      vehicleImage: c.vehicleImage ?? null,
+      date: c.requestedByGuard
+        ? new Date(c.createdAt).toLocaleDateString()
+        : c.scheduledEntry?.toLocaleDateString() ?? "-",
+      scheduledCheckIn: c.scheduledEntry
+        ? new Date(c.scheduledEntry).toLocaleTimeString()
+        : "-",
+      scheduledCheckOut: c.scheduledExit
+        ? new Date(c.scheduledExit).toLocaleTimeString()
+        : "-",
+      checkInDate: c.checkInTime
+        ? new Date(c.checkInTime).toLocaleDateString()
+        : "-",
+      checkInTime: c.checkInTime
+        ? new Date(c.checkInTime).toLocaleTimeString()
+        : "-",
+      checkOutTime: c.checkOutTime
+        ? new Date(c.checkOutTime).toLocaleTimeString()
+        : "-",
+      status: c.status,
+    }));
+  } catch (err) {
+    throw new Error("Failed to retrieve contractor records.");
   }
 };
 

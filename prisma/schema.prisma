@@ -34,6 +34,9 @@ model Visitor {
   name                    String
   purpose                 String
   phone                   String?
+  materialType            MaterialType?
+  materialImage           String?
+  isContractor            Boolean   @default(false)
   vehicleNumber           String?
   vehicleImage            String?
   scheduledEntry          DateTime?
@@ -107,6 +110,18 @@ enum ApprovalType {
   CLIENT_ONLY
   END_USER_ONLY
   BOTH
+}
+
+enum MaterialType {
+  NONE
+  CONSTRUCTION
+  ELECTRICAL
+  HVAC
+  IT_HARDWARE
+  SAFETY_GEAR
+  PLUMBING_SUPPLIES
+  MAINTENANCE_SUPPLIES
+  OTHER
 }
 
 model EndUser {

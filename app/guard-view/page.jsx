@@ -16,6 +16,15 @@ import {
     checkoutVisitor,
     checkInVisitorByQr,
   } from "@/actions/visitor";
+import {
+  contractorRequestByGuard,
+  getContractorLogsForGuard,
+  getScheduledContractors,
+  getCheckedInContractors,
+  validateContractor,
+  checkoutContractor,
+  checkInContractorByQr,
+} from "@/actions/contractor";
 import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
@@ -35,6 +44,17 @@ const BarcodeScanner = dynamic(
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+const materialOptions = [
+  "NONE",
+  "CONSTRUCTION",
+  "ELECTRICAL",
+  "HVAC",
+  "IT_HARDWARE",
+  "SAFETY_GEAR",
+  "PLUMBING_SUPPLIES",
+  "MAINTENANCE_SUPPLIES",
+  "OTHER",
+];
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function GuardView() {
