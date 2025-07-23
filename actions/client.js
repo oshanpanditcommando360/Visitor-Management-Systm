@@ -332,7 +332,7 @@ export const approveContractorRequest = async ({ contractorId, durationHours, du
     await createAlert({
       contractorId,
       type: "SCHEDULED",
-      message: `${existing.name} contractor approved`,
+      message: `Contractor ${existing.name} visit approved`,
     });
     return { success: true };
   } catch (err) {
@@ -350,7 +350,7 @@ export const denyContractorRequest = async (contractorId) => {
     await createAlert({
       contractorId: contractor.id,
       type: "DENIED",
-      message: `${contractor.name} contractor denied`,
+      message: `Contractor ${contractor.name} visit denied`,
     });
     return { success: true };
   } catch (err) {

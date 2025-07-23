@@ -35,7 +35,11 @@ export const checkOverstayedVisitors = async () => {
         data: { status: "OVERSTAYED" },
       });
       await db.alert.create({
-        data: { contractorId: c.id, type: "TIMEOUT", message: `${c.name} has overstayed` },
+        data: {
+          contractorId: c.id,
+          type: "TIMEOUT",
+          message: `Contractor ${c.name} has overstayed`,
+        },
       });
     }
   }

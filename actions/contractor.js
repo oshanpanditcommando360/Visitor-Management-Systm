@@ -79,7 +79,9 @@ export const contractorRequestByGuard = async (data) => {
     await createAlert({
       contractorId: contractor.id,
       type: "REQUESTED",
-      message: `${contractor.name} contractor request`,
+      message: `Contractor ${contractor.name} requested for visit with ${
+        contractor.material ?? "no"
+      } material`,
     });
     return contractor;
   } catch (err) {
@@ -157,7 +159,7 @@ export const validateContractor = async ({
     await createAlert({
       contractorId: contractor.id,
       type: "CHECKED_IN",
-      message: `${contractor.name} validated at gate`,
+      message: `Contractor ${contractor.name} validated at gate`,
     });
     return contractor;
   } catch (err) {
@@ -175,7 +177,7 @@ export const checkoutContractor = async (contractorId) => {
     await createAlert({
       contractorId: contractor.id,
       type: "EXIT",
-      message: `${contractor.name} checked out`,
+      message: `Contractor ${contractor.name} checked out`,
     });
     return contractor;
   } catch (err) {
@@ -206,7 +208,7 @@ export const checkInContractorByQr = async (
     await createAlert({
       contractorId: contractor.id,
       type: "CHECKED_IN",
-      message: `${contractor.name} validated by QR`,
+      message: `Contractor ${contractor.name} validated by QR`,
     });
     return contractor;
   } catch (err) {

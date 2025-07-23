@@ -103,7 +103,14 @@ export default function Alerts({ onNew }) {
                   <div className="flex-1">
                     <AlertTitle className="flex items-center gap-2">
                       {variant.title}
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${
+                          alert.for === "VISITOR"
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : "bg-green-100 text-green-800 border-green-200"
+                        }`}
+                      >
                         {alert.for}
                       </Badge>
                     </AlertTitle>
