@@ -298,6 +298,67 @@ export const getAllVisitorRecords = async (clientId) => {
   }
 };
 
+export const getPendingContractorRequests = async (clientId) => {
+  try {
+    return await db.contractor.findMany({
+      where: { clientId, status: "PENDING" },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.error("Error fetching contractor requests:", err);
+    throw new Error("Could not fetch contractor requests.");
+  }
+};
+
+export const approveContractorRequest = async ({ contractorId, durationHours, durationMinutes }) => {
+  try {
+    const now = new Date();
+    const existing = await db.contractor.findUnique({
+      where: { id: contractorId },
+      select: { scheduledExit: true, name: true },
+    });
+    if (!existing) throw new Error("Contractor not found");
+    const scheduledExit = new Date(
+      now.getTime() + (durationHours || 0) * 3600 * 1000 + (durationMinutes || 0) * 60 * 1000
+    );
+    await db.contractor.update({
+      where: { id: contractorId },
+      data: {
+        status: "SCHEDULED",
+        scheduledEntry: now,
+        scheduledExit,
+      },
+    });
+    await createAlert({
+      contractorId,
+      type: "SCHEDULED",
+      message: `${existing.name} contractor approved`,
+    });
+    return { success: true };
+  } catch (err) {
+    console.error("Error approving contractor:", err);
+    throw new Error("Could not approve contractor.");
+  }
+};
+
+export const denyContractorRequest = async (contractorId) => {
+  try {
+    const contractor = await db.contractor.update({
+      where: { id: contractorId },
+      data: { status: "DENIED" },
+    });
+    await createAlert({
+      contractorId: contractor.id,
+      type: "DENIED",
+      message: `${contractor.name} contractor denied`,
+    });
+    return { success: true };
+  } catch (err) {
+    console.error("Error denying contractor:", err);
+    throw new Error("Could not deny contractor.");
+  }
+};
+
 
 
 

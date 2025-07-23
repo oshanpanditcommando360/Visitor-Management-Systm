@@ -69,11 +69,13 @@ model Otp {
 
 model Alert {
   id          String   @id @default(uuid())
-  visitorId   String
+  visitorId   String?
+  contractorId String?
   type        AlertType
   message     String
   triggeredAt DateTime @default(now())
-  visitor     Visitor  @relation(fields: [visitorId], references: [id])
+  visitor     Visitor?  @relation(fields: [visitorId], references: [id])
+  contractor  Contractor? @relation(fields: [contractorId], references: [id])
 }
 
 enum VisitorStatus {
@@ -130,8 +132,10 @@ model Contractor {
   name           String
   phone          String
   material       String?
+  materialImage  String?
   vehicleNumber  String?
   vehicleImage   String?
+  department     Department    @default(ADMIN)
   scheduledEntry DateTime?
   scheduledExit  DateTime?
   checkInTime    DateTime?
