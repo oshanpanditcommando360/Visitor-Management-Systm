@@ -129,7 +129,12 @@ export const getCheckedInContractors = async () => {
   }
 };
 
-export const validateContractor = async ({ contractorId, otp, vehicleImage }) => {
+export const validateContractor = async ({
+  contractorId,
+  otp,
+  vehicleImage,
+  materialImage,
+}) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
     const existing = await db.contractor.findUnique({
@@ -146,6 +151,7 @@ export const validateContractor = async ({ contractorId, otp, vehicleImage }) =>
         status: "CHECKED_IN",
         checkInTime: new Date(),
         vehicleImage: vehicleImage ?? undefined,
+        materialImage: materialImage ?? undefined,
       },
     });
     await createAlert({
@@ -178,7 +184,11 @@ export const checkoutContractor = async (contractorId) => {
   }
 };
 
-export const checkInContractorByQr = async (contractorId, vehicleImage) => {
+export const checkInContractorByQr = async (
+  contractorId,
+  vehicleImage,
+  materialImage
+) => {
   try {
     const existing = await db.contractor.findUnique({ where: { id: contractorId } });
     if (!existing) throw new Error("Invalid QR code");
@@ -190,6 +200,7 @@ export const checkInContractorByQr = async (contractorId, vehicleImage) => {
         status: "CHECKED_IN",
         checkInTime: new Date(),
         vehicleImage: vehicleImage ?? undefined,
+        materialImage: materialImage ?? undefined,
       },
     });
     await createAlert({

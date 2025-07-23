@@ -246,10 +246,12 @@ export default function GuardView() {
           contractorId: selectedContractor,
           otp,
           vehicleImage: validationPlate || undefined,
+          materialImage: validationMaterial || undefined,
         });
         toast.success("Contractor validated");
         setOtp("");
         setValidationPlate("");
+        setValidationMaterial("");
       } else {
         await checkoutContractor(selectedContractor);
         toast.success("Contractor checked out");
@@ -295,9 +297,11 @@ export default function GuardView() {
       try {
         await checkInContractorByQr(
           result.text,
-          validationPlate || undefined
+          validationPlate || undefined,
+          validationMaterial || undefined
         );
         setValidationPlate("");
+        setValidationMaterial("");
         toast.success("Contractor validated");
         fetchContractorLogs();
         fetchScheduledCons();
@@ -647,6 +651,21 @@ export default function GuardView() {
                           </DialogContent>
                         </Dialog>
                         <p className="text-sm text-muted-foreground">{validationPlate ? "Plate captured" : "Vehicle No.: N/A"}</p>
+                        <Dialog open={showCheckMaterialScanner} onOpenChange={setShowCheckMaterialScanner}>
+                          <DialogTrigger asChild>
+                            <Button variant="secondary" className="w-full text-sm">Capture Material Image</Button>
+                          </DialogTrigger>
+                          <DialogContent className="text-center">
+                            <DialogHeader>
+                              <DialogTitle>Capture Material</DialogTitle>
+                            </DialogHeader>
+                            <div className="mt-4 flex flex-col items-center space-y-4">
+                              <Webcam ref={webcamRef} screenshotFormat="image/jpeg" videoConstraints={{ facingMode: { exact: "environment" } }} />
+                              <Button onClick={handleCheckMaterialCapture} className="mt-2">Capture</Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        <p className="text-sm text-muted-foreground">{validationMaterial ? "Material captured" : "Material: N/A"}</p>
                       </div>
                     )}
                     <Button
