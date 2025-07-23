@@ -25,6 +25,7 @@ model Client {
   password  String
   department Department
   visitors  Visitor[] @relation("ClientVisitors")
+  contractors Contractor[]
   endUsers  EndUser[]
   createdAt DateTime  @default(now())
 }
@@ -122,4 +123,21 @@ model EndUser {
   client       Client       @relation(fields: [clientId], references: [id])
   visitors     Visitor[]
   createdAt    DateTime     @default(now())
+}
+
+model Contractor {
+  id             String        @id @default(uuid())
+  name           String
+  phone          String
+  material       String?
+  vehicleNumber  String?
+  vehicleImage   String?
+  scheduledEntry DateTime?
+  scheduledExit  DateTime?
+  checkInTime    DateTime?
+  checkOutTime   DateTime?
+  status         VisitorStatus @default(PENDING)
+  clientId       String
+  client         Client        @relation(fields: [clientId], references: [id])
+  createdAt      DateTime      @default(now())
 }

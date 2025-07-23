@@ -4,7 +4,9 @@ import { getCurrentClient } from "@/actions/session";
 import { Button } from "@/components/ui/button";
 import IncomingRequests from "./_components/IncomingRequests";
 import AddVisitor from "./_components/AddVisitor";
+import AddContractor from "./_components/AddContractor";
 import VisitorRecords from "./_components/VisitorRecords";
+import ContractorRecords from "./_components/ContractorRecords";
 import Alerts from "./_components/Alerts";
 import EndUserSection from "./_components/EndUserSection";
 
@@ -33,8 +35,10 @@ export default function ClientDashboard() {
   const sections = {
     requests: <IncomingRequests onNew={setNewRequests} />,
     add: <AddVisitor />,
+    contractor: <AddContractor />,
     enduser: <EndUserSection />,
     records: <VisitorRecords onNew={setNewRecords} />,
+    contractorRecords: <ContractorRecords onNew={setNewRecords} />,
     alerts: <Alerts onNew={setNewAlerts} />,
   };
 
@@ -66,6 +70,7 @@ export default function ClientDashboard() {
           )}
         </Button>
         <Button variant={activeSection === "add" ? "default" : "outline"} onClick={() => setActiveSection("add")}>Add a Visitor</Button>
+        <Button variant={activeSection === "contractor" ? "default" : "outline"} onClick={() => setActiveSection("contractor")}>Add a Contractor</Button>
         <Button variant={activeSection === "enduser" ? "default" : "outline"} onClick={() => setActiveSection("enduser")}>End Users</Button>
         <Button
           variant={activeSection === "records" ? "default" : "outline"}
@@ -74,6 +79,16 @@ export default function ClientDashboard() {
         >
           Visitor Records
           {newRecords && activeSection !== "records" && (
+            <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
+          )}
+        </Button>
+        <Button
+          variant={activeSection === "contractorRecords" ? "default" : "outline"}
+          className="relative"
+          onClick={() => setActiveSection("contractorRecords")}
+        >
+          Contractor Records
+          {newRecords && activeSection !== "contractorRecords" && (
             <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
           )}
         </Button>
