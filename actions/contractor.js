@@ -40,6 +40,8 @@ export const getAllContractorRecords = async (clientId) => {
       name: c.name,
       phone: c.phone,
       material: c.material ?? "None",
+      vehicleImage: c.vehicleImage ?? null,
+      materialImage: c.materialImage ?? null,
       date: c.scheduledEntry ? c.scheduledEntry.toLocaleDateString() : "-",
       scheduledCheckIn: c.scheduledEntry
         ? c.scheduledEntry.toLocaleTimeString()

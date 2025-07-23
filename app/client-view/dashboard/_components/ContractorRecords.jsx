@@ -2,7 +2,15 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import QRCode from "react-qr-code";
 import { getAllContractorRecords } from "@/actions/contractor";
 import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
@@ -58,17 +66,20 @@ export default function ContractorRecords({ onNew }) {
         </div>
         {records.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-[600px] w-full text-xs md:text-sm text-left border-collapse">
+            <table className="min-w-[800px] w-full text-xs md:text-sm text-left border-collapse">
               <thead className="bg-muted">
                 <tr>
                   <th className="p-2 border-b font-medium">Name</th>
                   <th className="p-2 border-b font-medium">Material</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Vehicle Img</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">Material Img</th>
                   <th className="p-2 border-b font-medium">Date</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled CheckIn</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled Checkout</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">CheckIn</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">CheckOut</th>
                   <th className="p-2 border-b font-medium">Status</th>
+                  <th className="p-2 border-b font-medium">QR</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -76,6 +87,40 @@ export default function ContractorRecords({ onNew }) {
                   <tr key={c.id}>
                     <td className="p-2 whitespace-nowrap">{c.name}</td>
                     <td className="p-2 whitespace-nowrap">{c.material}</td>
+                    <td className="p-2 whitespace-nowrap hidden md:table-cell">
+                      {c.vehicleImage ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">Img</Button>
+                          </DialogTrigger>
+                          <DialogContent className="text-center">
+                            <DialogHeader>
+                              <DialogTitle>Vehicle Image</DialogTitle>
+                            </DialogHeader>
+                            <img src={c.vehicleImage} alt="Vehicle" className="mx-auto" />
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    <td className="p-2 whitespace-nowrap hidden md:table-cell">
+                      {c.materialImage ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">Img</Button>
+                          </DialogTrigger>
+                          <DialogContent className="text-center">
+                            <DialogHeader>
+                              <DialogTitle>Material Image</DialogTitle>
+                            </DialogHeader>
+                            <img src={c.materialImage} alt="Material" className="mx-auto" />
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
                     <td className="p-2 whitespace-nowrap">{c.date}</td>
                     <td className="p-2 whitespace-nowrap hidden md:table-cell">{c.scheduledCheckIn}</td>
                     <td className="p-2 whitespace-nowrap hidden md:table-cell">{c.scheduledCheckOut}</td>
@@ -85,6 +130,23 @@ export default function ContractorRecords({ onNew }) {
                       <Badge variant={getBadgeVariant(c.status)} className="text-xs">
                         {c.status}
                       </Badge>
+                    </td>
+                    <td className="p-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="icon" variant="ghost">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="text-center">
+                          <DialogHeader>
+                            <DialogTitle>Contractor QR</DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-4 flex justify-center">
+                            <QRCode value={c.id} />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </td>
                   </tr>
                 ))}

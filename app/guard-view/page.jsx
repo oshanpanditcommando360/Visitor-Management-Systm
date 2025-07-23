@@ -726,7 +726,7 @@ export default function GuardView() {
                 <TabsContent value="visitorl">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Visitor Request Logs</h3>
+                      <h3 className="text-lg font-semibold">Visitor Logs</h3>
                       <Button onClick={fetchLogs} size="icon" variant="ghost">
                         <RefreshCw className={`h-4 w-4 ${loadingLogs ? "animate-spin" : ""}`} />
                       </Button>
