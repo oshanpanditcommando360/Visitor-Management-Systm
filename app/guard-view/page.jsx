@@ -44,6 +44,7 @@ const BarcodeScanner = dynamic(
 
 const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"];
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
+const materialTypes = ["None", "Construction", "Electrical", "Plumbing", "Other"];
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
 export default function GuardView() {
@@ -451,11 +452,23 @@ export default function GuardView() {
                     </div>
                     <div className="space-y-1">
                       <Label>Material Type</Label>
-                      <Input
-                        placeholder="Material"
+                      <Select
+                        onValueChange={(v) =>
+                          setContractorReq({ ...contractorReq, material: v })
+                        }
                         value={contractorReq.material}
-                        onChange={(e) => setContractorReq({ ...contractorReq, material: e.target.value })}
-                      />
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select material" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {materialTypes.map((m) => (
+                            <SelectItem key={m} value={m}>
+                              {m}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <Dialog open={showPlateScanner} onOpenChange={setShowPlateScanner}>
                       <DialogTrigger asChild>

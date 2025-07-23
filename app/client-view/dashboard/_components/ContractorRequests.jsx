@@ -13,17 +13,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getPendingVisitorRequests,approveVisitorRequest,denyVisitorRequest } from "@/actions/client";
+import {
+  getPendingContractorRequests,
+  approveContractorRequest,
+  denyContractorRequest,
+} from "@/actions/client";
 import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
-const fmt = (v) =>
-  v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
-
-export default function IncomingRequests({ onNew }) {
+export default function ContractorRequests({ onNew }) {
   const [requests, setRequests] = useState([]);
   const [durations, setDurations] = useState({});
-  const [selectedVisitor, setSelectedVisitor] = useState(null);
+  const [selected, setSelected] = useState(null);
   const [popupIndex, setPopupIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -33,14 +34,14 @@ export default function IncomingRequests({ onNew }) {
     setLoading(true);
     try {
       const client = await getCurrentClient();
-      const data = await getPendingVisitorRequests(client?.clientId);
+      const data = await getPendingContractorRequests(client?.clientId);
       setRequests(data);
       if (onNew && data.length > prevCount.current) {
         onNew(true);
       }
       prevCount.current = data.length;
     } catch (err) {
-      toast.error("Failed to fetch visitor requests.");
+      toast.error("Failed to fetch contractor requests.");
     } finally {
       setLoading(false);
     }
@@ -53,29 +54,13 @@ export default function IncomingRequests({ onNew }) {
   }, []);
 
   const handleChange = (field, value) => {
-    setDurations((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setDurations((prev) => ({ ...prev, [field]: value }));
   };
 
   const openPopup = (item, index) => {
-    setSelectedVisitor(item);
+    setSelected(item);
     setPopupIndex(index);
     setDurations({ hours: "", minutes: "" });
-  };
-
-  const approveWithoutDuration = async (visitorId) => {
-    setActionLoading(true);
-    try {
-      await approveVisitorRequest({ visitorId, byClient: true });
-      toast.success("Visitor approved.");
-      fetchRequests();
-    } catch (err) {
-      toast.error("Failed to approve visitor.");
-    } finally {
-      setActionLoading(false);
-    }
   };
 
   const handleApprove = async () => {
@@ -83,19 +68,18 @@ export default function IncomingRequests({ onNew }) {
     try {
       const durationHours = parseInt(durations.hours) || 0;
       const durationMinutes = parseInt(durations.minutes) || 0;
-      await approveVisitorRequest({
-        visitorId: selectedVisitor.id,
+      await approveContractorRequest({
+        contractorId: selected.id,
         durationHours,
         durationMinutes,
-        byClient: true,
       });
-      toast.success("Visitor approved.");
+      toast.success("Contractor approved.");
       fetchRequests();
     } catch (err) {
-      toast.error("Failed to approve visitor.");
+      toast.error("Failed to approve contractor.");
     } finally {
       setActionLoading(false);
-      setSelectedVisitor(null);
+      setSelected(null);
       setPopupIndex(null);
     }
   };
@@ -103,11 +87,11 @@ export default function IncomingRequests({ onNew }) {
   const handleDeny = async (item) => {
     setActionLoading(true);
     try {
-      await denyVisitorRequest(item.id);
-      toast.success("Visitor denied.");
+      await denyContractorRequest(item.id);
+      toast.success("Contractor denied.");
       fetchRequests();
     } catch (err) {
-      toast.error("Failed to deny visitor.");
+      toast.error("Failed to deny contractor.");
     } finally {
       setActionLoading(false);
     }
@@ -117,7 +101,7 @@ export default function IncomingRequests({ onNew }) {
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Visit Requests</h2>
+          <h2 className="text-lg font-semibold">Contractor Requests</h2>
           <Button size="icon" variant="ghost" onClick={fetchRequests}>
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
@@ -132,11 +116,11 @@ export default function IncomingRequests({ onNew }) {
                 <div>
                   <p className="font-medium flex items-center gap-2">
                     {item.name}
-                    <Badge variant="outline" className="text-[10px]">Visitor</Badge>
+                    <Badge variant="outline" className="text-[10px]">Contractor</Badge>
                   </p>
-                  <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
+                  <p className="text-sm text-muted-foreground">Material: {item.material ?? "None"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Vehicle No.:
+                    License Plate:
                     {item.vehicleImage ? (
                       <Dialog>
                         <DialogTrigger asChild>
@@ -153,66 +137,62 @@ export default function IncomingRequests({ onNew }) {
                       " N/A"
                     )}
                   </p>
-                  {item.requestedByGuard ? (
-                    <p className="text-xs text-muted-foreground">
-                      Requested by guard for {fmt(item.department)}
-                    </p>
-                  ) : item.requestedByEndUser ? (
-                    <p className="text-xs text-muted-foreground">Added by {fmt(item.department)}</p>
-                  ) : null}
+                  <p className="text-sm text-muted-foreground">
+                    Material Image:
+                    {item.materialImage ? (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="link" className="px-1 py-0 text-sm">Img</Button>
+                        </DialogTrigger>
+                        <DialogContent className="text-center">
+                          <DialogHeader>
+                            <DialogTitle>Material</DialogTitle>
+                          </DialogHeader>
+                          <img src={item.materialImage} alt="Material" className="mx-auto" />
+                        </DialogContent>
+                      </Dialog>
+                    ) : (
+                      " N/A"
+                    )}
+                  </p>
                 </div>
                 <div className="flex space-x-2 mt-2 md:mt-0">
-                  {item.requestedByEndUser ? (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => approveWithoutDuration(item.id)}
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? "Processing..." : "Approve"}
-                    </Button>
-                  ) : (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => openPopup(item, idx)}
-                        >
-                          Approve
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="default" onClick={() => openPopup(item, idx)}>
+                        Approve
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Select Visit Duration</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex gap-3 mt-4">
+                        <Input
+                          type="number"
+                          placeholder="Hours"
+                          min={0}
+                          className="w-1/2"
+                          value={durations.hours || ""}
+                          onChange={(e) => handleChange("hours", e.target.value)}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Minutes"
+                          min={0}
+                          max={59}
+                          className="w-1/2"
+                          value={durations.minutes || ""}
+                          onChange={(e) => handleChange("minutes", e.target.value)}
+                        />
+                      </div>
+                      <DialogFooter className="mt-4">
+                        <Button onClick={handleApprove} disabled={actionLoading}>
+                          {actionLoading ? "Processing..." : "Approve"}
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Select Visit Duration</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex gap-3 mt-4">
-                          <Input
-                            type="number"
-                            placeholder="Hours"
-                            min={0}
-                            className="w-1/2"
-                            value={durations.hours || ""}
-                            onChange={(e) => handleChange("hours", e.target.value)}
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Minutes"
-                            min={0}
-                            max={59}
-                            className="w-1/2"
-                            value={durations.minutes || ""}
-                            onChange={(e) => handleChange("minutes", e.target.value)}
-                          />
-                        </div>
-                        <DialogFooter className="mt-4">
-                          <Button onClick={handleApprove} disabled={actionLoading}>
-                            {actionLoading ? "Processing..." : "Add Visitor"}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  )}
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     size="sm"
                     variant="destructive"

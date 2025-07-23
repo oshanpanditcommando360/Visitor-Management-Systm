@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getCurrentClient } from "@/actions/session";
 import { Button } from "@/components/ui/button";
 import IncomingRequests from "./_components/IncomingRequests";
+import ContractorRequests from "./_components/ContractorRequests";
 import AddVisitor from "./_components/AddVisitor";
 import AddContractor from "./_components/AddContractor";
 import VisitorRecords from "./_components/VisitorRecords";
@@ -27,13 +28,15 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     if (activeSection === "alerts") setNewAlerts(false);
-    if (activeSection === "requests") setNewRequests(false);
+    if (activeSection === "requests" || activeSection === "contractorRequests")
+      setNewRequests(false);
     if (activeSection === "records") setNewRecords(false);
   }, [activeSection]);
 
 
   const sections = {
     requests: <IncomingRequests onNew={setNewRequests} />,
+    contractorRequests: <ContractorRequests onNew={setNewRequests} />,
     add: <AddVisitor />,
     contractor: <AddContractor />,
     enduser: <EndUserSection />,
@@ -66,6 +69,16 @@ export default function ClientDashboard() {
         >
           Incoming Requests
           {newRequests && activeSection !== "requests" && (
+            <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
+          )}
+        </Button>
+        <Button
+          variant={activeSection === "contractorRequests" ? "default" : "outline"}
+          className="relative"
+          onClick={() => setActiveSection("contractorRequests")}
+        >
+          Contractor Requests
+          {newRequests && activeSection !== "contractorRequests" && (
             <span className="absolute top-0 right-0 mt-1 mr-1 w-2 h-2 bg-red-500 rounded-full" />
           )}
         </Button>
