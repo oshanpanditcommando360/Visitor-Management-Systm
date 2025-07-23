@@ -315,25 +315,30 @@ export const approveContractorRequest = async ({ contractorId, durationHours, du
     const now = new Date();
     const existing = await db.contractor.findUnique({
       where: { id: contractorId },
-      select: { scheduledExit: true, name: true },
+      select: { name: true },
     });
     if (!existing) throw new Error("Contractor not found");
+
     const scheduledExit = new Date(
       now.getTime() + (durationHours || 0) * 3600 * 1000 + (durationMinutes || 0) * 60 * 1000
     );
+
     await db.contractor.update({
       where: { id: contractorId },
       data: {
-        status: "SCHEDULED",
+        status: "CHECKED_IN",
         scheduledEntry: now,
         scheduledExit,
+        checkInTime: now,
       },
     });
+
     await createAlert({
       contractorId,
-      type: "SCHEDULED",
-      message: `Contractor ${existing.name} visit approved`,
+      type: "CHECKED_IN",
+      message: `Contractor ${existing.name} checked in`,
     });
+
     return { success: true };
   } catch (err) {
     console.error("Error approving contractor:", err);
