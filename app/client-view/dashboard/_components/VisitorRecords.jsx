@@ -74,6 +74,7 @@ export default function VisitorRecords({ onNew }) {
                   <th className="p-2 border-b font-medium">Name</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Vehicle No.</th>
                   <th className="p-2 border-b font-medium">Department</th>
+                  <th className="p-2 border-b font-medium">Post</th>
                   <th className="p-2 border-b font-medium">Date</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled CheckIn</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled Checkout</th>
@@ -107,6 +108,7 @@ export default function VisitorRecords({ onNew }) {
                       )}
                     </td>
                     <td className="p-2 whitespace-nowrap">{fmt(visitor.department)}</td>
+                    <td className="p-2 whitespace-nowrap">{visitor.post}</td>
                     <td className="p-2 whitespace-nowrap">{visitor.date}</td>
                     <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.scheduledCheckIn}</td>
                     <td className="p-2 hidden md:table-cell whitespace-nowrap">{visitor.scheduledCheckOut}</td>

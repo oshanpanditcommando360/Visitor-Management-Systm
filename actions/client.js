@@ -255,6 +255,7 @@ export const getAllVisitorRecords = async (clientId) => {
         endUserId: true,
         approvedByClient: true,
         vehicleImage: true,
+        post: true,
         status: true,
         createdAt: true,
       },
@@ -266,6 +267,7 @@ export const getAllVisitorRecords = async (clientId) => {
       vehicleImage: visitor.vehicleImage ?? null,
       purpose: visitor.purpose,
       department: visitor.department ?? "-",
+      post: visitor.post ?? "-",
       endUserName: visitor.endUserName ?? "-",
       date: visitor.requestedByGuard
         ? new Date(visitor.createdAt).toLocaleDateString()
@@ -295,6 +297,72 @@ export const getAllVisitorRecords = async (clientId) => {
     }));
   } catch (err) {
     throw new Error("Failed to retrieve visitor records.");
+  }
+};
+
+export const getPendingContractorRequests = async (clientId) => {
+  try {
+    return await db.contractor.findMany({
+      where: { clientId, status: "PENDING" },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.error("Error fetching contractor requests:", err);
+    throw new Error("Could not fetch contractor requests.");
+  }
+};
+
+export const approveContractorRequest = async ({ contractorId, durationHours, durationMinutes }) => {
+  try {
+    const now = new Date();
+    const existing = await db.contractor.findUnique({
+      where: { id: contractorId },
+      select: { name: true },
+    });
+    if (!existing) throw new Error("Contractor not found");
+
+    const scheduledExit = new Date(
+      now.getTime() + (durationHours || 0) * 3600 * 1000 + (durationMinutes || 0) * 60 * 1000
+    );
+
+    await db.contractor.update({
+      where: { id: contractorId },
+      data: {
+        status: "CHECKED_IN",
+        scheduledEntry: now,
+        scheduledExit,
+        checkInTime: now,
+      },
+    });
+
+    await createAlert({
+      contractorId,
+      type: "CHECKED_IN",
+      message: `Contractor ${existing.name} checked in`,
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error approving contractor:", err);
+    throw new Error("Could not approve contractor.");
+  }
+};
+
+export const denyContractorRequest = async (contractorId) => {
+  try {
+    const contractor = await db.contractor.update({
+      where: { id: contractorId },
+      data: { status: "DENIED" },
+    });
+    await createAlert({
+      contractorId: contractor.id,
+      type: "DENIED",
+      message: `Contractor ${contractor.name} visit denied`,
+    });
+    return { success: true };
+  } catch (err) {
+    console.error("Error denying contractor:", err);
+    throw new Error("Could not deny contractor.");
   }
 };
 

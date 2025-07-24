@@ -5,74 +5,78 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../lib/generated/prisma"
   binaryTargets = ["native", "linux-musl", "rhel-openssl-3.0.x"]
-  engineType = "binary"
+  engineType    = "binary"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model Client {
-  id        String    @id @default(uuid())
-  name      String
-  email     String    @unique
-  phone     String
-  password  String
-  department Department
-  visitors  Visitor[] @relation("ClientVisitors")
-  endUsers  EndUser[]
-  createdAt DateTime  @default(now())
+  id          String       @id @default(uuid())
+  name        String
+  email       String       @unique
+  phone       String
+  password    String
+  department  Department
+  visitors    Visitor[]    @relation("ClientVisitors")
+  contractors Contractor[]
+  endUsers    EndUser[]
+  createdAt   DateTime     @default(now())
 }
 
 model Visitor {
-  id                      String    @id @default(uuid())
-  name                    String
-  purpose                 String
-  phone                   String?
-  vehicleNumber           String?
-  vehicleImage            String?
-  scheduledEntry          DateTime?
-  scheduledExit           DateTime?
-  checkInTime             DateTime?
-  checkOutTime            DateTime?
-  requestedByGuard        Boolean      @default(false)
-  requestedByEndUser     Boolean      @default(false)
-  approvedByClient        Boolean?
-  status                  VisitorStatus @default(PENDING)
-  clientId                String
-  client                  Client    @relation("ClientVisitors", fields: [clientId], references: [id])
-  department              Department?
-  endUserName             String?
-  endUserId               String?
-  endUser                 EndUser?  @relation(fields: [endUserId], references: [id])
-  approvalType            ApprovalType?
-  otp                     Otp?
-  alerts                  Alert[]
-  createdAt               DateTime @default(now())
+  id                 String        @id @default(uuid())
+  name               String
+  purpose            String
+  phone              String?
+  vehicleNumber      String?
+  vehicleImage       String?
+  post               String?
+  scheduledEntry     DateTime?
+  scheduledExit      DateTime?
+  checkInTime        DateTime?
+  checkOutTime       DateTime?
+  requestedByGuard   Boolean       @default(false)
+  requestedByEndUser Boolean       @default(false)
+  approvedByClient   Boolean?
+  status             VisitorStatus @default(PENDING)
+  clientId           String
+  client             Client        @relation("ClientVisitors", fields: [clientId], references: [id])
+  department         Department?
+  endUserName        String?
+  endUserId          String?
+  endUser            EndUser?      @relation(fields: [endUserId], references: [id])
+  approvalType       ApprovalType?
+  otp                Otp?
+  alerts             Alert[]
+  createdAt          DateTime      @default(now())
 }
 
 model Otp {
-  id          String   @id @default(uuid())
-  code        String
-  visitorId   String   @unique
-  expiresAt   DateTime
-  isUsed      Boolean  @default(false)
-  visitor     Visitor  @relation(fields: [visitorId], references: [id])
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  code      String
+  visitorId String   @unique
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  visitor   Visitor  @relation(fields: [visitorId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Alert {
-  id          String   @id @default(uuid())
-  visitorId   String
-  type        AlertType
-  message     String
-  triggeredAt DateTime @default(now())
-  visitor     Visitor  @relation(fields: [visitorId], references: [id])
+  id           String      @id @default(uuid())
+  visitorId    String?
+  contractorId String?
+  type         AlertType
+  message      String
+  triggeredAt  DateTime    @default(now())
+  visitor      Visitor?    @relation(fields: [visitorId], references: [id])
+  contractor   Contractor? @relation(fields: [contractorId], references: [id])
 }
 
 enum VisitorStatus {
@@ -110,16 +114,37 @@ enum ApprovalType {
 }
 
 model EndUser {
-  id           String       @id @default(uuid())
-  name         String
-  email        String       @unique
-  password     String
-  department   Department
-  post         String
-  approvalType ApprovalType
-  canAddVisitor Boolean @default(false)
-  clientId     String
-  client       Client       @relation(fields: [clientId], references: [id])
-  visitors     Visitor[]
-  createdAt    DateTime     @default(now())
+  id            String       @id @default(uuid())
+  name          String
+  email         String       @unique
+  password      String
+  department    Department
+  post          String
+  approvalType  ApprovalType
+  canAddVisitor Boolean      @default(false)
+  clientId      String
+  client        Client       @relation(fields: [clientId], references: [id])
+  visitors      Visitor[]
+  createdAt     DateTime     @default(now())
+}
+
+model Contractor {
+  id             String        @id @default(uuid())
+  name           String
+  phone          String?
+  material       String?
+  materialImage  String?
+  vehicleNumber  String?
+  vehicleImage   String?
+  post           String?
+  department     Department    @default(ADMIN)
+  scheduledEntry DateTime?
+  scheduledExit  DateTime?
+  checkInTime    DateTime?
+  checkOutTime   DateTime?
+  status         VisitorStatus @default(PENDING)
+  clientId       String
+  client         Client        @relation(fields: [clientId], references: [id])
+  alerts         Alert[]
+  createdAt      DateTime      @default(now())
 }

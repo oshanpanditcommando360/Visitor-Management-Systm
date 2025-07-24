@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Info, CheckCircle, LogOut, AlertTriangle, RefreshCw, X } from "lucide-react";
 import { getClientAlerts, deleteAlert } from "@/actions/alert";
 import { getCurrentClient } from "@/actions/session";
@@ -100,7 +101,19 @@ export default function Alerts({ onNew }) {
                 <Alert key={alert.id} className={`flex items-start gap-3 ${variant.color}`}>
                   <div className="mt-1">{variant.icon}</div>
                   <div className="flex-1">
-                    <AlertTitle>{variant.title}</AlertTitle>
+                    <AlertTitle className="flex items-center gap-2">
+                      {variant.title}
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${
+                          alert.for === "VISITOR"
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : "bg-green-100 text-green-800 border-green-200"
+                        }`}
+                      >
+                        {alert.for}
+                      </Badge>
+                    </AlertTitle>
                     <AlertDescription>
                       {alert.message}
                       <span className="block text-xs mt-1 text-muted-foreground">

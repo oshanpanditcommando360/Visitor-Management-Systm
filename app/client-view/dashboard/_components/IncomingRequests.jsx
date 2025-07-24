@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +13,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getPendingVisitorRequests,approveVisitorRequest,denyVisitorRequest } from "@/actions/client";
+import {
+  getPendingVisitorRequests,
+  getPendingContractorRequests,
+  approveVisitorRequest,
+  denyVisitorRequest,
+  approveContractorRequest,
+  denyContractorRequest,
+} from "@/actions/client";
 import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
@@ -22,7 +30,7 @@ const fmt = (v) =>
 export default function IncomingRequests({ onNew }) {
   const [requests, setRequests] = useState([]);
   const [durations, setDurations] = useState({});
-  const [selectedVisitor, setSelectedVisitor] = useState(null);
+  const [selectedReq, setSelectedReq] = useState(null);
   const [popupIndex, setPopupIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -32,12 +40,19 @@ export default function IncomingRequests({ onNew }) {
     setLoading(true);
     try {
       const client = await getCurrentClient();
-      const data = await getPendingVisitorRequests(client?.clientId);
-      setRequests(data);
-      if (onNew && data.length > prevCount.current) {
+      const [visitors, contractors] = await Promise.all([
+        getPendingVisitorRequests(client?.clientId),
+        getPendingContractorRequests(client?.clientId),
+      ]);
+      const combined = [
+        ...visitors.map((v) => ({ ...v, _type: "visitor" })),
+        ...contractors.map((c) => ({ ...c, _type: "contractor" })),
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setRequests(combined);
+      if (onNew && combined.length > prevCount.current) {
         onNew(true);
       }
-      prevCount.current = data.length;
+      prevCount.current = combined.length;
     } catch (err) {
       toast.error("Failed to fetch visitor requests.");
     } finally {
@@ -59,7 +74,7 @@ export default function IncomingRequests({ onNew }) {
   };
 
   const openPopup = (item, index) => {
-    setSelectedVisitor(item);
+    setSelectedReq(item);
     setPopupIndex(index);
     setDurations({ hours: "", minutes: "" });
   };
@@ -82,19 +97,28 @@ export default function IncomingRequests({ onNew }) {
     try {
       const durationHours = parseInt(durations.hours) || 0;
       const durationMinutes = parseInt(durations.minutes) || 0;
-      await approveVisitorRequest({
-        visitorId: selectedVisitor.id,
-        durationHours,
-        durationMinutes,
-        byClient: true,
-      });
-      toast.success("Visitor approved.");
+      if (selectedReq._type === "visitor") {
+        await approveVisitorRequest({
+          visitorId: selectedReq.id,
+          durationHours,
+          durationMinutes,
+          byClient: true,
+        });
+        toast.success("Visitor approved.");
+      } else {
+        await approveContractorRequest({
+          contractorId: selectedReq.id,
+          durationHours,
+          durationMinutes,
+        });
+        toast.success("Contractor approved.");
+      }
       fetchRequests();
     } catch (err) {
-      toast.error("Failed to approve visitor.");
+      toast.error("Failed to approve request.");
     } finally {
       setActionLoading(false);
-      setSelectedVisitor(null);
+      setSelectedReq(null);
       setPopupIndex(null);
     }
   };
@@ -102,11 +126,16 @@ export default function IncomingRequests({ onNew }) {
   const handleDeny = async (item) => {
     setActionLoading(true);
     try {
-      await denyVisitorRequest(item.id);
-      toast.success("Visitor denied.");
+      if (item._type === "visitor") {
+        await denyVisitorRequest(item.id);
+        toast.success("Visitor denied.");
+      } else {
+        await denyContractorRequest(item.id);
+        toast.success("Contractor denied.");
+      }
       fetchRequests();
     } catch (err) {
-      toast.error("Failed to deny visitor.");
+      toast.error("Failed to deny request.");
     } finally {
       setActionLoading(false);
     }
@@ -116,7 +145,7 @@ export default function IncomingRequests({ onNew }) {
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Visit Requests</h2>
+          <h2 className="text-lg font-semibold">Incoming Requests</h2>
           <Button size="icon" variant="ghost" onClick={fetchRequests}>
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
@@ -129,10 +158,23 @@ export default function IncomingRequests({ onNew }) {
                 className="flex flex-col md:flex-row md:items-center md:justify-between border-b pb-3"
               >
                 <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
+                  <p className="font-medium flex items-center gap-2">
+                    {item.name}
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] ${item._type === "visitor" ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-green-100 text-green-800 border-green-200"}`}
+                    >
+                      {item._type === "visitor" ? "Visitor" : "Contractor"}
+                    </Badge>
+                  </p>
+                  {item._type === "visitor" ? (
+                    <p className="text-sm text-muted-foreground">Purpose: {item.purpose}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Material: {item.material ?? "None"}</p>
+                  )}
+                  <p className="text-sm text-muted-foreground">Post: {item.post ?? "-"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Vehicle No.:
+                    License Plate:
                     {item.vehicleImage ? (
                       <Dialog>
                         <DialogTrigger asChild>
@@ -149,16 +191,38 @@ export default function IncomingRequests({ onNew }) {
                       " N/A"
                     )}
                   </p>
-                  {item.requestedByGuard ? (
-                    <p className="text-xs text-muted-foreground">
-                      Requested by guard for {fmt(item.department)}
+                  {item._type === "contractor" && (
+                    <p className="text-sm text-muted-foreground">
+                      Material Image:
+                      {item.materialImage ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="link" className="px-1 py-0 text-sm">Img</Button>
+                          </DialogTrigger>
+                          <DialogContent className="text-center">
+                            <DialogHeader>
+                              <DialogTitle>Material</DialogTitle>
+                            </DialogHeader>
+                            <img src={item.materialImage} alt="Material" className="mx-auto" />
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        " N/A"
+                      )}
                     </p>
-                  ) : item.requestedByEndUser ? (
-                    <p className="text-xs text-muted-foreground">Added by {fmt(item.department)}</p>
-                  ) : null}
+                  )}
+                  {item._type === "visitor" && (
+                    <>
+                      {item.requestedByGuard ? (
+                        <p className="text-xs text-muted-foreground">Requested by guard for {fmt(item.department)}</p>
+                      ) : item.requestedByEndUser ? (
+                        <p className="text-xs text-muted-foreground">Added by {fmt(item.department)}</p>
+                      ) : null}
+                    </>
+                  )}
                 </div>
                 <div className="flex space-x-2 mt-2 md:mt-0">
-                  {item.requestedByEndUser ? (
+                  {item._type === "visitor" && item.requestedByEndUser ? (
                     <Button
                       size="sm"
                       variant="default"
@@ -203,7 +267,7 @@ export default function IncomingRequests({ onNew }) {
                         </div>
                         <DialogFooter className="mt-4">
                           <Button onClick={handleApprove} disabled={actionLoading}>
-                            {actionLoading ? "Processing..." : "Add Visitor"}
+                            {actionLoading ? "Processing..." : item._type === "visitor" ? "Add Visitor" : "Approve"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
