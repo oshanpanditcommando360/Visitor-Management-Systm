@@ -46,6 +46,14 @@ const purposeOptions = ["Client Meeting", "Maintenance", "Delivery", "Interview"
 const departments = ["FINANCE", "ADMIN", "HR", "IT", "OPERATIONS"];
 const materialTypes = ["None", "Construction", "Electrical", "Plumbing", "Other"];
 const fmt = (v) => v.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+const posts = [
+  "Main Gate",
+  "Reception",
+  "Gate 1",
+  "Gate 2",
+  "Warehouse",
+  "Rear Entrance",
+];
 
 export default function GuardView() {
   const [request, setRequest] = useState({ name: "", purpose: "", department: "", clientId: "", vehicleImage: "" });
@@ -78,6 +86,12 @@ export default function GuardView() {
   const [showCheckMaterialScanner, setShowCheckMaterialScanner] = useState(false);
   const webcamRef = useRef(null);
   const [validationMaterial, setValidationMaterial] = useState("");
+  const [post, setPost] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("guardPost");
+    if (saved) setPost(saved);
+  }, []);
 
 
   const fetchLogs = async () => {
@@ -179,6 +193,7 @@ export default function GuardView() {
     if (client?.clientId) {
       requestData.clientId = client.clientId;
     }
+    requestData.post = post;
     setRequestLoading(true);
     try {
       await visitRequestByGuard(requestData);
@@ -197,6 +212,7 @@ export default function GuardView() {
     const client = await getCurrentClient();
     const req = { ...contractorReq };
     if (client?.clientId) req.clientId = client.clientId;
+    req.post = post;
     setRequestLoading(true);
     try {
       await contractorRequestByGuard(req);
@@ -219,12 +235,13 @@ export default function GuardView() {
           visitorId: selectedVisitor,
           otp,
           vehicleImage: validationPlate || undefined,
+          post,
         });
         toast.success("Visitor validated");
         setOtp("");
         setValidationPlate("");
       } else {
-        await checkoutVisitor(selectedVisitor);
+        await checkoutVisitor(selectedVisitor, post);
         toast.success("Visitor checked out");
       }
       setSelectedVisitor("");
@@ -248,13 +265,14 @@ export default function GuardView() {
           otp,
           vehicleImage: validationPlate || undefined,
           materialImage: validationMaterial || undefined,
+          post,
         });
         toast.success("Contractor validated");
         setOtp("");
         setValidationPlate("");
         setValidationMaterial("");
       } else {
-        await checkoutContractor(selectedContractor);
+        await checkoutContractor(selectedContractor, post);
         toast.success("Contractor checked out");
       }
       setSelectedContractor("");
@@ -276,7 +294,8 @@ export default function GuardView() {
       try {
         await checkInVisitorByQr(
           result.text,
-          validationPlate || undefined
+          validationPlate || undefined,
+          post
         );
         setValidationPlate("");
         toast.success("Visitor validated");
@@ -299,7 +318,8 @@ export default function GuardView() {
         await checkInContractorByQr(
           result.text,
           validationPlate || undefined,
-          validationMaterial || undefined
+          validationMaterial || undefined,
+          post
         );
         setValidationPlate("");
         setValidationMaterial("");
@@ -350,6 +370,35 @@ export default function GuardView() {
     toast.success("Material captured");
     setShowCheckMaterialScanner(false);
   };
+
+  if (!post) {
+    return (
+      <div className="max-w-sm mx-auto mt-10 px-4">
+        <Card className="shadow-xl">
+          <CardContent className="p-6 space-y-4">
+            <h2 className="text-xl font-semibold text-center">Please select your post</h2>
+            <Select
+              onValueChange={(v) => {
+                setPost(v);
+                localStorage.setItem("guardPost", v);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select post" />
+              </SelectTrigger>
+              <SelectContent>
+                {posts.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto mt-10 px-4">
@@ -741,6 +790,8 @@ export default function GuardView() {
                               <th className="p-2 border-b">Name</th>
                               <th className="p-2 border-b">Purpose</th>
                               <th className="p-2 border-b">Requested</th>
+                              <th className="p-2 border-b">Post</th>
+                              <th className="p-2 border-b">Post</th>
                               <th className="p-2 border-b">Status</th>
                             </tr>
                           </thead>
@@ -750,6 +801,7 @@ export default function GuardView() {
                                 <td className="p-2">{log.name}</td>
                                 <td className="p-2">{log.purpose}</td>
                                 <td className="p-2">{new Date(log.createdAt).toLocaleString()}</td>
+                                <td className="p-2">{log.post ?? "-"}</td>
                                 <td className="p-2">
                                   <span className="px-2 py-1 text-xs rounded bg-gray-200">{log.status}</span>
                                 </td>
@@ -788,6 +840,7 @@ export default function GuardView() {
                                 <td className="p-2">{c.name}</td>
                                 <td className="p-2">{c.material}</td>
                                 <td className="p-2">{new Date(c.createdAt).toLocaleString()}</td>
+                                <td className="p-2">{c.post ?? "-"}</td>
                                 <td className="p-2">
                                   <span className="px-2 py-1 text-xs rounded bg-gray-200">{c.status}</span>
                                 </td>

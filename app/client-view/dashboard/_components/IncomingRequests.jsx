@@ -172,6 +172,7 @@ export default function IncomingRequests({ onNew }) {
                   ) : (
                     <p className="text-sm text-muted-foreground">Material: {item.material ?? "None"}</p>
                   )}
+                  <p className="text-sm text-muted-foreground">Post: {item.post ?? "-"}</p>
                   <p className="text-sm text-muted-foreground">
                     License Plate:
                     {item.vehicleImage ? (

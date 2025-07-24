@@ -20,6 +20,7 @@ export const visitRequestByGuard = async (visitData) => {
         name: visitData.name,
         purpose: visitData.purpose,
         vehicleImage: visitData.vehicleImage ?? null,
+        post: visitData.post ?? null,
         clientId,
         department: visitData.department,
         endUserName: endUser?.name ?? null,
@@ -32,7 +33,7 @@ export const visitRequestByGuard = async (visitData) => {
     await createAlert({
       visitorId: visitor.id,
       type: "REQUESTED",
-      message: `${visitor.name} visit requested`,
+      message: `${visitor.name} visit requested from ${visitData.post}`,
     });
     return visitor;
   } catch (error) {
@@ -78,7 +79,7 @@ export const getScheduledVisitors = async () => {
   }
 };
 
-export const validateVisitor = async ({ visitorId, otp, vehicleImage }) => {
+export const validateVisitor = async ({ visitorId, otp, vehicleImage, post }) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
     const existing = await db.visitor.findUnique({ where: { id: visitorId }, select: { status: true } });
@@ -88,6 +89,7 @@ export const validateVisitor = async ({ visitorId, otp, vehicleImage }) => {
     }
     const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
     if (vehicleImage) updateData.vehicleImage = vehicleImage;
+    if (post) updateData.post = post;
     const visitor = await db.visitor.update({
       where: { id: visitorId },
       data: updateData,
@@ -95,7 +97,7 @@ export const validateVisitor = async ({ visitorId, otp, vehicleImage }) => {
     await createAlert({
       visitorId: visitor.id,
       type: "CHECKED_IN",
-      message: `${visitor.name} validated at gate`,
+      message: `${visitor.name} validated at ${post}`,
     });
     return visitor;
   } catch (error) {
@@ -117,7 +119,7 @@ export const getCheckedInVisitors = async () => {
   }
 };
 
-export const checkoutVisitor = async (visitorId) => {
+export const checkoutVisitor = async (visitorId, post) => {
   try {
     const visitor = await db.visitor.update({
       where: { id: visitorId },
@@ -126,7 +128,7 @@ export const checkoutVisitor = async (visitorId) => {
     await createAlert({
       visitorId: visitor.id,
       type: "EXIT",
-      message: `${visitor.name} checked out`,
+      message: `${visitor.name} checked out from ${post}`,
     });
     return visitor;
   } catch (error) {
@@ -135,7 +137,7 @@ export const checkoutVisitor = async (visitorId) => {
   }
 };
 
-export const checkInVisitorByQr = async (visitorId, vehicleImage) => {
+export const checkInVisitorByQr = async (visitorId, vehicleImage, post) => {
   try {
     const existing = await db.visitor.findUnique({ where: { id: visitorId } });
     if (!existing) {
@@ -152,6 +154,7 @@ export const checkInVisitorByQr = async (visitorId, vehicleImage) => {
 
     const updateData = { status: "CHECKED_IN", checkInTime: new Date() };
     if (vehicleImage) updateData.vehicleImage = vehicleImage;
+    if (post) updateData.post = post;
     const visitor = await db.visitor.update({
       where: { id: visitorId },
       data: updateData,
@@ -159,7 +162,7 @@ export const checkInVisitorByQr = async (visitorId, vehicleImage) => {
     await createAlert({
       visitorId: visitor.id,
       type: "CHECKED_IN",
-      message: `${visitor.name} validated by QR`,
+      message: `${visitor.name} validated by QR at ${post}`,
     });
     return visitor;
   } catch (error) {

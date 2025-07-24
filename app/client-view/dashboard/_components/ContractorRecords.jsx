@@ -71,6 +71,7 @@ export default function ContractorRecords({ onNew }) {
                 <tr>
                   <th className="p-2 border-b font-medium">Name</th>
                   <th className="p-2 border-b font-medium">Material</th>
+                  <th className="p-2 border-b font-medium">Post</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Vehicle Img</th>
                   <th className="p-2 border-b font-medium hidden md:table-cell">Material Img</th>
                   <th className="p-2 border-b font-medium">Date</th>
@@ -87,6 +88,7 @@ export default function ContractorRecords({ onNew }) {
                   <tr key={c.id}>
                     <td className="p-2 whitespace-nowrap">{c.name}</td>
                     <td className="p-2 whitespace-nowrap">{c.material}</td>
+                    <td className="p-2 whitespace-nowrap">{c.post}</td>
                     <td className="p-2 whitespace-nowrap hidden md:table-cell">
                       {c.vehicleImage ? (
                         <Dialog>

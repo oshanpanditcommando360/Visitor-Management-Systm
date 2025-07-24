@@ -255,6 +255,7 @@ export const getAllVisitorRecords = async (clientId) => {
         endUserId: true,
         approvedByClient: true,
         vehicleImage: true,
+        post: true,
         status: true,
         createdAt: true,
       },
@@ -266,6 +267,7 @@ export const getAllVisitorRecords = async (clientId) => {
       vehicleImage: visitor.vehicleImage ?? null,
       purpose: visitor.purpose,
       department: visitor.department ?? "-",
+      post: visitor.post ?? "-",
       endUserName: visitor.endUserName ?? "-",
       date: visitor.requestedByGuard
         ? new Date(visitor.createdAt).toLocaleDateString()

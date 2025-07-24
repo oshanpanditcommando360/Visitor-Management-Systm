@@ -37,6 +37,7 @@ model Visitor {
   phone              String?
   vehicleNumber      String?
   vehicleImage       String?
+  post               String?
   scheduledEntry     DateTime?
   scheduledExit      DateTime?
   checkInTime        DateTime?
@@ -135,6 +136,7 @@ model Contractor {
   materialImage  String?
   vehicleNumber  String?
   vehicleImage   String?
+  post           String?
   department     Department    @default(ADMIN)
   scheduledEntry DateTime?
   scheduledExit  DateTime?

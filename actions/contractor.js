@@ -42,6 +42,7 @@ export const getAllContractorRecords = async (clientId) => {
       material: c.material ?? "None",
       vehicleImage: c.vehicleImage ?? null,
       materialImage: c.materialImage ?? null,
+      post: c.post ?? "-",
       date: c.scheduledEntry ? c.scheduledEntry.toLocaleDateString() : "-",
       scheduledCheckIn: c.scheduledEntry
         ? c.scheduledEntry.toLocaleTimeString()
@@ -74,6 +75,7 @@ export const contractorRequestByGuard = async (data) => {
         materialImage: data.materialImage ?? null,
         vehicleImage: data.vehicleImage ?? null,
         vehicleNumber: data.vehicleNumber ?? null,
+        post: data.post ?? null,
         clientId,
         status: "PENDING",
       },
@@ -83,7 +85,7 @@ export const contractorRequestByGuard = async (data) => {
       type: "REQUESTED",
       message: `Contractor ${contractor.name} requested for visit with ${
         contractor.material ?? "no"
-      } material`,
+      } material from ${data.post}`,
     });
     return contractor;
   } catch (err) {
@@ -138,6 +140,7 @@ export const validateContractor = async ({
   otp,
   vehicleImage,
   materialImage,
+  post,
 }) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
@@ -156,12 +159,13 @@ export const validateContractor = async ({
         checkInTime: new Date(),
         vehicleImage: vehicleImage ?? undefined,
         materialImage: materialImage ?? undefined,
+        post: post ?? undefined,
       },
     });
     await createAlert({
       contractorId: contractor.id,
       type: "CHECKED_IN",
-      message: `Contractor ${contractor.name} validated at gate`,
+      message: `Contractor ${contractor.name} validated at ${post}`,
     });
     return contractor;
   } catch (err) {
@@ -170,7 +174,7 @@ export const validateContractor = async ({
   }
 };
 
-export const checkoutContractor = async (contractorId) => {
+export const checkoutContractor = async (contractorId, post) => {
   try {
     const contractor = await db.contractor.update({
       where: { id: contractorId },
@@ -179,7 +183,7 @@ export const checkoutContractor = async (contractorId) => {
     await createAlert({
       contractorId: contractor.id,
       type: "EXIT",
-      message: `Contractor ${contractor.name} checked out`,
+      message: `Contractor ${contractor.name} checked out from ${post}`,
     });
     return contractor;
   } catch (err) {
@@ -191,7 +195,8 @@ export const checkoutContractor = async (contractorId) => {
 export const checkInContractorByQr = async (
   contractorId,
   vehicleImage,
-  materialImage
+  materialImage,
+  post
 ) => {
   try {
     const existing = await db.contractor.findUnique({ where: { id: contractorId } });
@@ -205,12 +210,13 @@ export const checkInContractorByQr = async (
         checkInTime: new Date(),
         vehicleImage: vehicleImage ?? undefined,
         materialImage: materialImage ?? undefined,
+        post: post ?? undefined,
       },
     });
     await createAlert({
       contractorId: contractor.id,
       type: "CHECKED_IN",
-      message: `Contractor ${contractor.name} validated by QR`,
+      message: `Contractor ${contractor.name} validated by QR at ${post}`,
     });
     return contractor;
   } catch (err) {
