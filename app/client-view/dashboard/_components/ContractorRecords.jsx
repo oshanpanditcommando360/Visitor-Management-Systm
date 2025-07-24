@@ -15,6 +15,12 @@ import { getAllContractorRecords } from "@/actions/contractor";
 import { getCurrentClient } from "@/actions/session";
 import { toast } from "sonner";
 
+const fmt = (v) =>
+  v
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase());
+
 export default function ContractorRecords({ onNew }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -72,13 +78,25 @@ export default function ContractorRecords({ onNew }) {
                   <th className="p-2 border-b font-medium">Name</th>
                   <th className="p-2 border-b font-medium">Material</th>
                   <th className="p-2 border-b font-medium">Post</th>
-                  <th className="p-2 border-b font-medium hidden md:table-cell">Vehicle Img</th>
-                  <th className="p-2 border-b font-medium hidden md:table-cell">Material Img</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">
+                    Vehicle Img
+                  </th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">
+                    Material Img
+                  </th>
                   <th className="p-2 border-b font-medium">Date</th>
-                  <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled CheckIn</th>
-                  <th className="p-2 border-b font-medium hidden md:table-cell">Scheduled Checkout</th>
-                  <th className="p-2 border-b font-medium hidden md:table-cell">CheckIn</th>
-                  <th className="p-2 border-b font-medium hidden md:table-cell">CheckOut</th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">
+                    Scheduled CheckIn
+                  </th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">
+                    Scheduled Checkout
+                  </th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">
+                    CheckIn
+                  </th>
+                  <th className="p-2 border-b font-medium hidden md:table-cell">
+                    CheckOut
+                  </th>
                   <th className="p-2 border-b font-medium">Status</th>
                   <th className="p-2 border-b font-medium">QR</th>
                 </tr>
@@ -93,13 +111,19 @@ export default function ContractorRecords({ onNew }) {
                       {c.vehicleImage ? (
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button size="sm" variant="outline">Img</Button>
+                            <Button size="sm" variant="outline">
+                              Img
+                            </Button>
                           </DialogTrigger>
                           <DialogContent className="text-center">
                             <DialogHeader>
                               <DialogTitle>Vehicle Image</DialogTitle>
                             </DialogHeader>
-                            <img src={c.vehicleImage} alt="Vehicle" className="mx-auto" />
+                            <img
+                              src={c.vehicleImage}
+                              alt="Vehicle"
+                              className="mx-auto"
+                            />
                           </DialogContent>
                         </Dialog>
                       ) : (
@@ -110,13 +134,19 @@ export default function ContractorRecords({ onNew }) {
                       {c.materialImage ? (
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button size="sm" variant="outline">Img</Button>
+                            <Button size="sm" variant="outline">
+                              Img
+                            </Button>
                           </DialogTrigger>
                           <DialogContent className="text-center">
                             <DialogHeader>
                               <DialogTitle>Material Image</DialogTitle>
                             </DialogHeader>
-                            <img src={c.materialImage} alt="Material" className="mx-auto" />
+                            <img
+                              src={c.materialImage}
+                              alt="Material"
+                              className="mx-auto"
+                            />
                           </DialogContent>
                         </Dialog>
                       ) : (
@@ -124,13 +154,24 @@ export default function ContractorRecords({ onNew }) {
                       )}
                     </td>
                     <td className="p-2 whitespace-nowrap">{c.date}</td>
-                    <td className="p-2 whitespace-nowrap hidden md:table-cell">{c.scheduledCheckIn}</td>
-                    <td className="p-2 whitespace-nowrap hidden md:table-cell">{c.scheduledCheckOut}</td>
-                    <td className="p-2 whitespace-nowrap hidden md:table-cell">{c.checkInTime}</td>
-                    <td className="p-2 whitespace-nowrap hidden md:table-cell">{c.checkOutTime}</td>
+                    <td className="p-2 whitespace-nowrap hidden md:table-cell">
+                      {c.scheduledCheckIn}
+                    </td>
+                    <td className="p-2 whitespace-nowrap hidden md:table-cell">
+                      {c.scheduledCheckOut}
+                    </td>
+                    <td className="p-2 whitespace-nowrap hidden md:table-cell">
+                      {c.checkInTime}
+                    </td>
+                    <td className="p-2 whitespace-nowrap hidden md:table-cell">
+                      {c.checkOutTime}
+                    </td>
                     <td className="p-2">
-                      <Badge variant={getBadgeVariant(c.status)} className="text-xs">
-                        {c.status}
+                      <Badge
+                        variant={getBadgeVariant(c.status)}
+                        className="text-xs"
+                      >
+                        {fmt(c.status)}
                       </Badge>
                     </td>
                     <td className="p-2">
@@ -156,7 +197,9 @@ export default function ContractorRecords({ onNew }) {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No contractor records available.</p>
+          <p className="text-sm text-muted-foreground">
+            No contractor records available.
+          </p>
         )}
       </CardContent>
     </Card>

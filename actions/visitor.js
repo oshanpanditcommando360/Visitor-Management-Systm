@@ -46,10 +46,7 @@ export const getVisitorLogsForGuard = async () => {
   try {
     const visitors = await db.visitor.findMany({
       where: {
-        OR: [
-          { requestedByGuard: true },
-          { checkInTime: { not: null } },
-        ],
+        OR: [{ requestedByGuard: true }, { checkInTime: { not: null } }],
       },
       orderBy: { createdAt: "desc" },
       take: 10,
@@ -79,10 +76,18 @@ export const getScheduledVisitors = async () => {
   }
 };
 
-export const validateVisitor = async ({ visitorId, otp, vehicleImage, post }) => {
+export const validateVisitor = async ({
+  visitorId,
+  otp,
+  vehicleImage,
+  post,
+}) => {
   if (otp !== "1234") throw new Error("Invalid OTP");
   try {
-    const existing = await db.visitor.findUnique({ where: { id: visitorId }, select: { status: true } });
+    const existing = await db.visitor.findUnique({
+      where: { id: visitorId },
+      select: { status: true },
+    });
     if (!existing) throw new Error("Visitor not found");
     if (existing.status === "CHECKED_IN") {
       throw new Error("Visitor already checked in with the qr/otp");
@@ -109,7 +114,7 @@ export const validateVisitor = async ({ visitorId, otp, vehicleImage, post }) =>
 export const getCheckedInVisitors = async () => {
   try {
     return await db.visitor.findMany({
-      where: { status: "CHECKED_IN" },
+      where: { status: { in: ["CHECKED_IN", "OVERSTAYED"] } },
       orderBy: { checkInTime: "desc" },
       select: { id: true, name: true },
     });
@@ -170,4 +175,3 @@ export const checkInVisitorByQr = async (visitorId, vehicleImage, post) => {
     throw new Error("Unable to validate visitor via QR.");
   }
 };
-

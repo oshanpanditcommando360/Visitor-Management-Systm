@@ -125,7 +125,7 @@ export const getScheduledContractors = async () => {
 export const getCheckedInContractors = async () => {
   try {
     return await db.contractor.findMany({
-      where: { status: "CHECKED_IN" },
+      where: { status: { in: ["CHECKED_IN", "OVERSTAYED"] } },
       orderBy: { checkInTime: "desc" },
       select: { id: true, name: true },
     });
@@ -196,12 +196,15 @@ export const checkInContractorByQr = async (
   contractorId,
   vehicleImage,
   materialImage,
-  post
+  post,
 ) => {
   try {
-    const existing = await db.contractor.findUnique({ where: { id: contractorId } });
+    const existing = await db.contractor.findUnique({
+      where: { id: contractorId },
+    });
     if (!existing) throw new Error("Invalid QR code");
-    if (existing.status === "CHECKED_OUT") throw new Error("This QR has expired.");
+    if (existing.status === "CHECKED_OUT")
+      throw new Error("This QR has expired.");
     if (existing.status === "CHECKED_IN") throw new Error("Already checked in");
     const contractor = await db.contractor.update({
       where: { id: contractorId },

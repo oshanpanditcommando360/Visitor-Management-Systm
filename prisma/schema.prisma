@@ -131,7 +131,7 @@ model EndUser {
 model Contractor {
   id             String        @id @default(uuid())
   name           String
-  phone          String
+  phone          String?
   material       String?
   materialImage  String?
   vehicleNumber  String?
